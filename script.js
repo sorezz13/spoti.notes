@@ -1,6 +1,7 @@
 // Spotify OAuth Configuration
 const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Your Spotify Client ID
-const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/";
+const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/main.html";
+
 
 
  // Redirect back to your app's root

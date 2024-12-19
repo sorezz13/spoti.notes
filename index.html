@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="manifest" href="manifest.json">
+  
+  
   <title>spoti.notes - Sign In</title>
 </head>
 <body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; text-align: center; font-family: 'Poppins', sans-serif;">
@@ -30,7 +36,8 @@
   <script>
     // Redirect URI for Spotify OAuth
     const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38";
-    const REDIRECT_URI = window.location.origin + "/main.html";
+    const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/main.html";
+
 
     // Spotify Authorization URL
     const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent("user-read-private user-read-email")}`;
