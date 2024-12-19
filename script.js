@@ -2,7 +2,6 @@
 const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Your Spotify Client ID
 const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/";
 
-    
 
  // Redirect back to your app's root
 const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
