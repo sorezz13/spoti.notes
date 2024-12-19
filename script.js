@@ -205,3 +205,27 @@ function deleteEntry(id) {
   entries = entries.filter((entry) => entry.id !== id);
   localStorage.setItem("journalEntries", JSON.stringify(entries));
 }
+
+
+// Extract Spotify Access Token from URL
+function getSpotifyAccessToken() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get("access_token");
+
+  if (accessToken) {
+    localStorage.setItem("spotifyAccessToken", accessToken); // Save token for future use
+    return accessToken;
+  }
+
+  return localStorage.getItem("spotifyAccessToken"); // Return saved token if available
+}
+
+// Check for Spotify Token on Page Load
+document.addEventListener("DOMContentLoaded", () => {
+  const token = getSpotifyAccessToken();
+  if (!token && window.location.pathname === "/main.html") {
+    alert("Please sign in with Spotify first.");
+    window.location.href = "/";
+  }
+});
