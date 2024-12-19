@@ -1,51 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-  <link rel="manifest" href="manifest.json">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>spoti.notes</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="spoti.notes">
   
   
-  <title>spoti.notes - Sign In</title>
-</head>
-<body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; text-align: center; font-family: 'Poppins', sans-serif;">
-  <div style="padding: 20px;">
-    <h1 style="font-size: 2.5rem; font-weight: 600; color: #1DB954;   position: relative;
-    display: inline-block;
   
-    background-image: linear-gradient(
-      to right,
-      #1DB954, 
-      #80E6A2, /* Lighter version of green */
-      #1DB954
-    );
-    background-size: 200% auto;
-    background-clip: text;
-    -webkit-background-clip: text; /* For Safari support */
-    color: transparent;
-    ">spoti.notes</h1>
-    <p style="font-size: 1.2rem; margin: 20px 0;">Your personal journal, powered by Spotify.</p>
-    <button id="spotifyLoginBtn" style="padding: 10px 20px; font-size: 1.1rem; background: linear-gradient(135deg, #1DB954, #0e7a3f); color: white; border: none; border-radius: 25px; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;">
-      Sign in with Spotify
-    </button>
+  
+  
+  </head>
+  
+<body>
+  <!-- Header -->
+  <header class="header">
+    <h1>spoti.notes</h1>
+  </header>
+
+<!-- Modal for Spotify Top Data -->
+<div id="spotifyTopModal" class="modal">
+  <div class="modal-content">
+    <h2>Your Spotify Top</h2>
+    <select id="timeRange">
+      <option value="short_term">Last Week</option>
+      <option value="medium_term">Last Month</option>
+      <option value="long_term">Last Year</option>
+    </select>
+    <div class="tabs">
+      <button id="tabArtists" class="tab active">Top Artists</button>
+      <button id="tabSongs" class="tab">Top Songs</button>
+      <button id="tabAlbums" class="tab">Top Albums</button>
+    </div>
+    <div id="topArtists" class="tab-content"></div>
+    <div id="topSongs" class="tab-content hidden"></div>
+    <div id="topAlbums" class="tab-content hidden"></div>
+    <button id="closeModal">Close</button>
+  </div>
+</div>
+
+  
+ 
+ 
+ 
+ 
+  <!-- Journal Container -->
+  <div class="journal-container">
+    <!-- Journal Entry Form -->
+    <div class="form">
+      <!-- Journal Entry Input -->
+      <textarea id="entry" placeholder="Write your thoughts here..."></textarea>
+
+      <!-- Song Search Section -->
+      <div class="song-search-container">
+        <input 
+          type="text" 
+          id="songSearch" 
+          placeholder="Search for a song of the day...">
+        <button id="searchSongBtn">Search Song</button>
+      </div>
+
+      <!-- Display Selected Song -->
+      <div id="selectedSong" class="song-info"></div>
+
+      <!-- Star Rating -->
+      <div class="rating-container" id="ratingContainer">
+        <p>Rate this song</p>
+        <div id="ratingStars" class="stars">
+          <span data-value="1">★</span>
+          <span data-value="2">★</span>
+          <span data-value="3">★</span>
+          <span data-value="4">★</span>
+          <span data-value="5">★</span>
+        </div>
+      </div>
+
+      <!-- Add Entry Button -->
+      <div class="button-container">
+        <button id="addEntryBtn">Add Entry</button>
+      </div>
+    </div>
+
+    <!-- Journal Entries Section -->
+    <div class="journal-entries" id="entries"></div>
   </div>
 
-  <script>
-    // Redirect URI for Spotify OAuth
-    const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38";
-    const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/main.html";
-
-
-    // Spotify Authorization URL
-    const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent("user-read-private user-read-email")}`;
-
-    // Event Listener: Spotify Login Button
-    document.getElementById("spotifyLoginBtn").addEventListener("click", () => {
-      window.location.href = SPOTIFY_AUTH_URL;
-    });
-  </script>
+  <!-- JavaScript -->
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,37 +1,7 @@
-// Spotify OAuth Configuration
-const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Your Spotify Client ID
-const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/main.html";
-
-
-
- // Redirect back to your app's root
-const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
-const SCOPES = ["user-read-private", "user-read-email"].join(" "); // Spotify scopes
-
-// Function to Redirect User to Spotify Login
-function redirectToSpotifyAuth() {
-  const authUrl = `${SPOTIFY_AUTH_URL}?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}`;
-  window.location.href = authUrl;
-}
-
-// Function to Extract Access Token from URL
-function getSpotifyAccessToken() {
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
-  const accessToken = params.get("access_token");
-
-  if (accessToken) {
-    localStorage.setItem("spotifyAccessToken", accessToken); // Save token locally
-    return accessToken;
-  }
-  return localStorage.getItem("spotifyAccessToken"); // Return saved token if available
-}
-
-// Initialize Spotify Authentication
-let spotifyAccessToken = getSpotifyAccessToken();
-if (!spotifyAccessToken) {
-  redirectToSpotifyAuth(); // Prompt user to log in if no token exists
-}
+// Spotify API Credentials
+const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38";
+const SPOTIFY_CLIENT_SECRET = "e70027250ac648eeb1695a6d85f44dc7";
+let spotifyAccessToken = "";
 
 // Selectors
 const addEntryBtn = document.getElementById("addEntryBtn");
@@ -44,21 +14,37 @@ const entriesContainer = document.getElementById("entries");
 
 // Global Variables
 let selectedSong = null;
-let songRating = 0;
+let songRating = 0; // Rating out of 5 stars
 
-// Load Entries on Page Load
+// Load Entries and Spotify Token on Page Load
 document.addEventListener("DOMContentLoaded", () => {
   loadEntries();
+  getSpotifyAccessToken();
   setupStarRatings();
-  toggleSearchButton(); // Disable search button initially
+  toggleSearchButton(); // Initially disable search if empty
 });
+
+// Function to Fetch Spotify Access Token
+async function getSpotifyAccessToken() {
+  try {
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic " + btoa(SPOTIFY_CLIENT_ID + ":" + SPOTIFY_CLIENT_SECRET),
+      },
+      body: "grant_type=client_credentials",
+    });
+
+    const data = await response.json();
+    spotifyAccessToken = data.access_token;
+  } catch (error) {
+    console.error("Error fetching Spotify access token:", error);
+  }
+}
 
 // Function to Search for a Song on Spotify
 async function searchSong(query) {
-  if (!spotifyAccessToken) {
-    console.error("No Spotify Access Token found.");
-    return;
-  }
   try {
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
@@ -85,16 +71,14 @@ async function searchSong(query) {
     }
   } catch (error) {
     console.error("Error searching for song:", error);
-    alert("Session expired. Please log in again.");
-    localStorage.removeItem("spotifyAccessToken");
-    redirectToSpotifyAuth();
+    return null;
   }
 }
 
-// Event Listener: Search Song Button
+// Event Listener: Search for a Song
 searchSongBtn.addEventListener("click", async () => {
   const query = songSearchInput.value.trim();
-  if (!query) return alert("Please enter a song name.");
+  if (!query) return;
 
   const song = await searchSong(query);
   if (song) {
@@ -103,10 +87,21 @@ searchSongBtn.addEventListener("click", async () => {
       ${song.title} by ${song.artist}
       <br>
       <img src="${song.albumArtwork}" alt="Album Artwork" style="margin-top: 10px; width: 100px; border-radius: 10px;">
-      ${song.previewUrl ? `<br><audio controls src="${song.previewUrl}" style="margin-top: 10px;"></audio>` : '<p style="color: red;">No preview available</p>'}
+      ${
+        song.previewUrl
+          ? `<br><audio controls src="${song.previewUrl}" style="margin-top: 10px;"></audio>`
+          : '<p style="color: red;">No preview available</p>'
+      }
     `;
   }
 });
+
+// Disable Search Button when Input is Empty
+function toggleSearchButton() {
+  songSearchInput.addEventListener("input", () => {
+    searchSongBtn.disabled = songSearchInput.value.trim() === "";
+  });
+}
 
 // Setup Star Ratings
 function setupStarRatings() {
@@ -126,7 +121,7 @@ function updateStarColors() {
   });
 }
 
-// Add New Journal Entry
+// Add New Entry
 addEntryBtn.addEventListener("click", () => {
   const text = entryInput.value.trim();
   if (!text) return alert("Please write something before adding an entry.");
@@ -142,7 +137,7 @@ addEntryBtn.addEventListener("click", () => {
   saveEntryToLocalStorage(newEntry);
   renderEntry(newEntry);
 
-  // Reset inputs
+  // Reset
   entryInput.value = "";
   selectedSongDisplay.innerHTML = "";
   songSearchInput.value = "";
@@ -152,37 +147,47 @@ addEntryBtn.addEventListener("click", () => {
   updateStarColors();
 });
 
-// Save Entry to Local Storage
+// Save to Local Storage
 function saveEntryToLocalStorage(entry) {
   const entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
   entries.push(entry);
   localStorage.setItem("journalEntries", JSON.stringify(entries));
 }
 
-// Load Entries from Local Storage
+// Load Entries
 function loadEntries() {
   const entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
   entries.forEach(renderEntry);
 }
 
-// Render Journal Entry
+// Generate Stars
+function generateStarsHTML(rating) {
+  const maxStars = 5;
+  return Array.from({ length: maxStars }, (_, i) =>
+    `<span style="color: ${i < rating ? "#1DB954" : "#ccc"}; font-size: 1.2rem;">&#9733;</span>`
+  ).join("");
+}
+
+// Render Entry
 function renderEntry(entry) {
   const entryDiv = document.createElement("div");
   entryDiv.classList.add("entry");
   entryDiv.setAttribute("data-id", entry.id);
 
   const songHTML = entry.song
-    ? `<div class="song">
+    ? `
+      <div class="song">
         <img src="${entry.song.albumArtwork}" alt="Album Artwork" style="width: 100px; border-radius: 10px;">
-        <p> <a href="${entry.song.url}" target="_blank" style="color:#1DB954;">${entry.song.title} by ${entry.song.artist}</a></p>
+        <p><a href="${entry.song.url}" target="_blank" style="color:#1DB954;">${entry.song.title} by ${entry.song.artist}</a></p>
         ${entry.song.previewUrl ? `<audio controls src="${entry.song.previewUrl}"></audio>` : '<p style="color: red;">No preview available</p>'}
-      </div>`
+      </div>
+    `
     : "";
 
   entryDiv.innerHTML = `
     <p>${entry.text}</p>
     ${songHTML}
-    <p>${generateStarsHTML(entry.rating)}</p>
+    <p>${generateStarsHTML(entry.rating || 0)}</p>
     <div class="date-time">${entry.date}</div>
     <button class="delete">Delete</button>
   `;
@@ -195,11 +200,6 @@ function renderEntry(entry) {
   entriesContainer.prepend(entryDiv);
 }
 
-// Generate Stars HTML
-function generateStarsHTML(rating) {
-  return Array.from({ length: 5 }, (_, i) => `<span style="color: ${i < rating ? "#1DB954" : "#ccc"};">★</span>`).join("");
-}
-
 // Delete Entry
 function deleteEntry(id) {
   let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
@@ -208,25 +208,108 @@ function deleteEntry(id) {
 }
 
 
-// Extract Spotify Access Token from URL
-function getSpotifyAccessToken() {
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
-  const accessToken = params.get("access_token");
+const REDIRECT_URI = "http://localhost:3000",; // Replace with your app's redirect URI
+const SCOPES = ["user-top-read"]; // Permissions needed for user top data
 
-  if (accessToken) {
-    localStorage.setItem("spotifyAccessToken", accessToken); // Save token for future use
-    return accessToken;
-  }
-
-  return localStorage.getItem("spotifyAccessToken"); // Return saved token if available
+function authorizeSpotifyUser() {
+  const authURL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPES.join('%20')}`;
+  window.location.href = authURL;
 }
 
-// Check for Spotify Token on Page Load
+function extractAccessTokenFromURI() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  return params.get("access_token");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  const token = getSpotifyAccessToken();
-  if (!token && window.location.pathname === "/main.html") {
-    alert("Please sign in with Spotify first.");
-    window.location.href = "/";
+  const token = extractAccessTokenFromURI();
+  if (token) {
+    spotifyAccessToken = token;
+  } else {
+    authorizeSpotifyUser(); // Redirect if no token
   }
 });
+
+
+async function fetchTopSpotifyData(type, timeRange = "medium_term") {
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/me/top/${type}?time_range=${timeRange}&limit=10`, {
+      headers: {
+        Authorization: `Bearer ${spotifyAccessToken}`,
+      },
+    });
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching Spotify top ${type}:`, error);
+  }
+}
+
+
+async function showTopData() {
+  const timeRange = document.getElementById("timeRange").value;
+
+  const topArtists = await fetchTopSpotifyData("artists", timeRange);
+  const topTracks = await fetchTopSpotifyData("tracks", timeRange);
+
+  document.getElementById("topArtists").innerHTML = topArtists.items.map(artist => `
+    <div>
+      <img src="${artist.images[0]?.url || "https://via.placeholder.com/100"}" alt="${artist.name}">
+      <p>${artist.name}</p>
+    </div>
+  `).join("");
+
+  document.getElementById("topSongs").innerHTML = topTracks.items.map(track => `
+    <div>
+      <img src="${track.album.images[0]?.url || "https://via.placeholder.com/100"}" alt="${track.name}">
+      <p>${track.name} by ${track.artists.map(a => a.name).join(", ")}</p>
+      <audio controls src="${track.preview_url}"></audio>
+    </div>
+  `).join("");
+
+  // Add logic for albums if desired
+  document.getElementById("spotifyTopModal").classList.add("active");
+}
+
+document.getElementById("timeRange").addEventListener("change", showTopData);
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("spotifyTopModal").classList.remove("active");
+});
+
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", (e) => {
+    // Remove 'active' class from all tabs
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    // Add 'active' class to the clicked tab
+    e.target.classList.add("active");
+
+    // Hide all tab contents
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+
+    // Show the corresponding content
+    const target = e.target.id.replace("tab", "top"); // e.g., "tabArtists" -> "topArtists"
+    document.getElementById(target).classList.remove("hidden");
+  });
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Close Modal Listener
+  document.getElementById("closeModal").addEventListener("click", () => {
+    document.getElementById("spotifyTopModal").classList.remove("active");
+  });
+
+  // Tab Switching Listeners
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", (e) => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      e.target.classList.add("active");
+
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+      const target = e.target.id.replace("tab", "top");
+      document.getElementById(target).classList.remove("hidden");
+    });
+  });
+});
+
