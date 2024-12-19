@@ -139,8 +139,6 @@ button:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
-
-
 /* Selected Song Display */
 .song-info img {
   margin-top: 10px;
@@ -240,10 +238,10 @@ button.delete:hover {
 
 
 /* Dissolve Animation */
-.entry.dissolve {
+.entry:dissolve {
   opacity: 0; /* Fade out */
   transform: scale(0.8); /* Shrink slightly */
-  transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth dissolve */
+  transition: opacity 3s ease, transform 3s ease; /* Smooth dissolve */
 }
 
 /* Responsive Design for Smaller Screens */
@@ -269,4 +267,3 @@ button.delete:hover {
     width: 80px;
   }
 }
-

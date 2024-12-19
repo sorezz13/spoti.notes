@@ -200,6 +200,7 @@ function renderEntry(entry) {
   entriesContainer.prepend(entryDiv);
 }
 
+
 // Delete Entry
 function deleteEntry(id) {
   let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
@@ -207,109 +208,4 @@ function deleteEntry(id) {
   localStorage.setItem("journalEntries", JSON.stringify(entries));
 }
 
-
-const REDIRECT_URI = "http://localhost:3000",; // Replace with your app's redirect URI
-const SCOPES = ["user-top-read"]; // Permissions needed for user top data
-
-function authorizeSpotifyUser() {
-  const authURL = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPES.join('%20')}`;
-  window.location.href = authURL;
-}
-
-function extractAccessTokenFromURI() {
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
-  return params.get("access_token");
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const token = extractAccessTokenFromURI();
-  if (token) {
-    spotifyAccessToken = token;
-  } else {
-    authorizeSpotifyUser(); // Redirect if no token
-  }
-});
-
-
-async function fetchTopSpotifyData(type, timeRange = "medium_term") {
-  try {
-    const response = await fetch(`https://api.spotify.com/v1/me/top/${type}?time_range=${timeRange}&limit=10`, {
-      headers: {
-        Authorization: `Bearer ${spotifyAccessToken}`,
-      },
-    });
-    return await response.json();
-  } catch (error) {
-    console.error(`Error fetching Spotify top ${type}:`, error);
-  }
-}
-
-
-async function showTopData() {
-  const timeRange = document.getElementById("timeRange").value;
-
-  const topArtists = await fetchTopSpotifyData("artists", timeRange);
-  const topTracks = await fetchTopSpotifyData("tracks", timeRange);
-
-  document.getElementById("topArtists").innerHTML = topArtists.items.map(artist => `
-    <div>
-      <img src="${artist.images[0]?.url || "https://via.placeholder.com/100"}" alt="${artist.name}">
-      <p>${artist.name}</p>
-    </div>
-  `).join("");
-
-  document.getElementById("topSongs").innerHTML = topTracks.items.map(track => `
-    <div>
-      <img src="${track.album.images[0]?.url || "https://via.placeholder.com/100"}" alt="${track.name}">
-      <p>${track.name} by ${track.artists.map(a => a.name).join(", ")}</p>
-      <audio controls src="${track.preview_url}"></audio>
-    </div>
-  `).join("");
-
-  // Add logic for albums if desired
-  document.getElementById("spotifyTopModal").classList.add("active");
-}
-
-document.getElementById("timeRange").addEventListener("change", showTopData);
-document.getElementById("closeModal").addEventListener("click", () => {
-  document.getElementById("spotifyTopModal").classList.remove("active");
-});
-
-
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", (e) => {
-    // Remove 'active' class from all tabs
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    // Add 'active' class to the clicked tab
-    e.target.classList.add("active");
-
-    // Hide all tab contents
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
-
-    // Show the corresponding content
-    const target = e.target.id.replace("tab", "top"); // e.g., "tabArtists" -> "topArtists"
-    document.getElementById(target).classList.remove("hidden");
-  });
-});
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  // Close Modal Listener
-  document.getElementById("closeModal").addEventListener("click", () => {
-    document.getElementById("spotifyTopModal").classList.remove("active");
-  });
-
-  // Tab Switching Listeners
-  document.querySelectorAll(".tab").forEach(tab => {
-    tab.addEventListener("click", (e) => {
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      e.target.classList.add("active");
-
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
-      const target = e.target.id.replace("tab", "top");
-      document.getElementById(target).classList.remove("hidden");
-    });
-  });
-});
 
