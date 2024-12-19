@@ -99,7 +99,7 @@ searchSongBtn.addEventListener("click", async () => {
   if (song) {
     selectedSong = song;
     selectedSongDisplay.innerHTML = `
-      🎵 Selected: ${song.title} by ${song.artist}
+      ${song.title} by ${song.artist}
       <br>
       <img src="${song.albumArtwork}" alt="Album Artwork" style="margin-top: 10px; width: 100px; border-radius: 10px;">
       ${song.previewUrl ? `<br><audio controls src="${song.previewUrl}" style="margin-top: 10px;"></audio>` : '<p style="color: red;">No preview available</p>'}
