@@ -290,3 +290,33 @@ button.delete:hover {
     width: 80px;
   }
 }
+
+.suggestion-item {
+  cursor: pointer;
+  padding: 10px;
+  border-bottom: 1px solid #444;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.suggestion-item:hover {
+  background-color: #1DB954;
+  color: #fff;
+}
+
+
+#removeSelectedSong {
+  margin-top: 10px;
+  background-color: #ff0000; /* Default red color */
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Smooth transition */
+}
+
+#removeSelectedSong:hover {
+  background-color: #1DB954; /* Spotify green on hover */
+}

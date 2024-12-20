@@ -2,113 +2,178 @@
 const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Replace with your Spotify Client ID
 const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/"; // Replace with your app's Redirect URI
 let spotifyAccessToken = "";
+let selectedSong = null; // Global state for the selected song
+let songRating = 0; // Global state for the selected rating
 
 // Selectors
 const connectSpotifyBtn = document.getElementById("connectSpotifyBtn");
 const addEntryBtn = document.getElementById("addEntryBtn");
 const entryInput = document.getElementById("entry");
 const songSearchInput = document.getElementById("songSearch");
-const searchSongBtn = document.getElementById("searchSongBtn");
 const selectedSongDisplay = document.getElementById("selectedSong");
 const ratingStars = document.getElementById("ratingStars");
 const entriesContainer = document.getElementById("entries");
+const suggestionsContainer = document.createElement("div");
+suggestionsContainer.id = "suggestionsContainer";
+suggestionsContainer.style.position = "absolute";
+suggestionsContainer.style.marginTop = "5px";
+suggestionsContainer.style.backgroundColor = "#2e2e2e";
+suggestionsContainer.style.color = "#e6e6e6";
+suggestionsContainer.style.zIndex = "1000";
+suggestionsContainer.style.border = "1px solid #444";
+suggestionsContainer.style.borderRadius = "5px";
+suggestionsContainer.style.maxHeight = "300px";
+suggestionsContainer.style.overflow = "hidden"; // Remove scroll bar
+suggestionsContainer.style.display = "none"; // Initially hidden
+songSearchInput.parentNode.insertBefore(suggestionsContainer, songSearchInput.nextSibling);
 
-// Initialize App
+// Adjust width dynamically
+function adjustSuggestionsWidth() {
+  suggestionsContainer.style.width = `${songSearchInput.offsetWidth}px`;
+}
+
+window.addEventListener("resize", adjustSuggestionsWidth);
 document.addEventListener("DOMContentLoaded", () => {
+  adjustSuggestionsWidth(); // Adjust on load
+
   const hash = window.location.hash.substring(1);
   const params = new URLSearchParams(hash);
   const newAccessToken = params.get("access_token");
 
   if (newAccessToken) {
-    console.log("New Access Token:", newAccessToken); // Debugging
+    console.log("New Access Token:", newAccessToken);
     localStorage.setItem("spotifyAccessToken", newAccessToken);
     spotifyAccessToken = newAccessToken;
     connectSpotifyBtn.style.display = "none";
-
-    // Clean up the URL by removing the hash
     window.history.replaceState({}, document.title, window.location.pathname);
+    checkAccessTokenExpiration();
   } else {
     spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
     connectSpotifyBtn.style.display = spotifyAccessToken ? "none" : "block";
+    checkAccessTokenExpiration();
   }
 
   connectSpotifyBtn.addEventListener("click", () => {
     const scopes = "user-read-private user-read-email";
     const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${encodeURIComponent(
       REDIRECT_URI
-    )}&scope=${encodeURIComponent(scopes)}&show_dialog=true`; // Forces login
+    )}&scope=${encodeURIComponent(scopes)}&show_dialog=true`;
     window.location.href = authUrl;
   });
 
-  // Initialize other app components
-  loadEntries();
+  setupSongSearch();
   setupStarRatings();
-  toggleSearchButton();
+  loadEntries();
 });
 
-// Other Functions (searchSong, toggleSearchButton, etc.) remain unchanged
+function checkAccessTokenExpiration() {
+  if (spotifyAccessToken) {
+    fetch("https://api.spotify.com/v1/me", {
+      headers: {
+        Authorization: `Bearer ${spotifyAccessToken}`,
+      },
+    })
+      .then((response) => {
+        if (response.status === 401) {
+          console.log("Access token expired");
+          localStorage.removeItem("spotifyAccessToken");
+          spotifyAccessToken = "";
+          connectSpotifyBtn.style.display = "block";
+        }
+      })
+      .catch((error) => {
+        console.error("Error verifying access token:", error);
+        connectSpotifyBtn.style.display = "block";
+      });
+  }
+}
 
-// Function to Search for a Song on Spotify
-async function searchSong(query) {
+function setupSongSearch() {
+  songSearchInput.addEventListener("input", async () => {
+    const query = songSearchInput.value.trim();
+    if (query) {
+      const suggestions = await fetchSuggestions(query);
+      renderSuggestions(suggestions);
+    } else {
+      suggestionsContainer.innerHTML = "";
+      suggestionsContainer.style.display = "none";
+    }
+  });
+}
+
+async function fetchSuggestions(query) {
   try {
     const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`,
       {
         headers: {
           Authorization: `Bearer ${spotifyAccessToken}`,
         },
       }
     );
-
     const data = await response.json();
-    if (data.tracks.items.length > 0) {
-      const song = data.tracks.items[0];
-      return {
-        title: song.name,
-        artist: song.artists[0].name,
-        url: song.external_urls.spotify,
-        albumArtwork: song.album.images[0]?.url || "https://via.placeholder.com/100",
-        previewUrl: song.preview_url,
-      };
-    } else {
-      alert("No songs found. Please try a different search.");
-      return null;
-    }
+    return data.tracks.items.map((track) => ({
+      title: track.name,
+      artist: track.artists[0].name,
+      albumArtwork: track.album.images[0]?.url || "https://via.placeholder.com/50",
+      url: track.external_urls.spotify,
+    }));
   } catch (error) {
-    console.error("Error searching for song:", error);
-    return null;
+    console.error("Error fetching suggestions:", error);
+    return [];
   }
 }
 
-// Event Listener: Search for a Song
-searchSongBtn.addEventListener("click", async () => {
-  const query = songSearchInput.value.trim();
-  if (!query) return;
-
-  const song = await searchSong(query);
-  if (song) {
-    selectedSong = song;
-    selectedSongDisplay.innerHTML = `
-      ${song.title} by ${song.artist}
-      <br>
-      <img src="${song.albumArtwork}" alt="Album Artwork" style="margin-top: 10px; width: 100px; border-radius: 10px;">
-      ${
-        song.previewUrl
-          ? `<br><audio controls src="${song.previewUrl}" style="margin-top: 10px;"></audio>`
-          : '<p style="color: red;">No preview available</p>'
-      }
-    `;
+function renderSuggestions(suggestions) {
+  if (suggestions.length === 0) {
+    suggestionsContainer.style.display = "none";
+    return;
   }
-});
 
-// Disable Search Button when Input is Empty
-function toggleSearchButton() {
-  songSearchInput.addEventListener("input", () => {
-    searchSongBtn.disabled = !songSearchInput.value.trim();
+  suggestionsContainer.style.display = "block";
+  suggestionsContainer.innerHTML = suggestions
+    .map(
+      (s) => `
+        <div class="suggestion-item" style="cursor: pointer; padding: 5px; border-bottom: 1px solid #444; display: flex; align-items: center;">
+          <img src="${s.albumArtwork}" alt="Album Artwork" style="width: 50px; vertical-align: middle; margin-right: 10px; border-radius: 5px;">
+          <span>${s.title} by ${s.artist}</span>
+        </div>
+      `
+    )
+    .join("");
+
+  const suggestionItems = document.querySelectorAll(".suggestion-item");
+  suggestionItems.forEach((item, index) => {
+    item.addEventListener("click", () => {
+      const selected = suggestions[index];
+      selectedSong = selected;
+      selectedSongDisplay.innerHTML = `
+        <div>
+          <img src="${selected.albumArtwork}" alt="Album Artwork" style="width: 100px; border-radius: 10px;">
+          <p><a href="${selected.url}" target="_blank" style="color: #1DB954;">${selected.title} by ${selected.artist}</a></p>
+          <button id="removeSelectedSong" style="margin-top: 10px; background-color: #ff0000; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s;">Remove Selected Song</button>
+        </div>
+      `;
+      suggestionsContainer.innerHTML = "";
+      suggestionsContainer.style.display = "none";
+
+      const removeButton = document.getElementById("removeSelectedSong");
+      removeButton.addEventListener("mouseover", () => {
+        removeButton.style.backgroundColor = "#ff5f5f";
+      });
+      removeButton.addEventListener("mouseout", () => {
+        removeButton.style.backgroundColor = "#ff0000";
+      });
+
+      removeButton.addEventListener("click", () => {
+        selectedSong = null;
+        selectedSongDisplay.innerHTML = "";
+        songSearchInput.value = "";
+      });
+    });
   });
 }
 
-// Setup Star Ratings
 function setupStarRatings() {
   ratingStars.addEventListener("click", (e) => {
     if (e.target.tagName === "SPAN") {
@@ -130,6 +195,7 @@ function updateStarColors() {
 addEntryBtn.addEventListener("click", () => {
   const text = entryInput.value.trim();
   if (!text) return alert("Please write something before adding an entry.");
+  if (!selectedSong) return alert("Please select a song from the suggestions.");
 
   const newEntry = {
     id: Date.now(),
@@ -142,30 +208,25 @@ addEntryBtn.addEventListener("click", () => {
   saveEntryToLocalStorage(newEntry);
   renderEntry(newEntry);
 
-  // Reset
   entryInput.value = "";
   selectedSongDisplay.innerHTML = "";
   songSearchInput.value = "";
-  searchSongBtn.disabled = true;
   selectedSong = null;
   songRating = 0;
   updateStarColors();
 });
 
-// Save to Local Storage
 function saveEntryToLocalStorage(entry) {
   const entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
   entries.push(entry);
   localStorage.setItem("journalEntries", JSON.stringify(entries));
 }
 
-// Load Entries
 function loadEntries() {
   const entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
   entries.forEach(renderEntry);
 }
 
-// Render Entry
 function renderEntry(entry) {
   const entryDiv = document.createElement("div");
   entryDiv.classList.add("entry");
@@ -176,7 +237,6 @@ function renderEntry(entry) {
       <div class="song">
         <img src="${entry.song.albumArtwork}" alt="Album Artwork" style="width: 100px; border-radius: 10px;">
         <p><a href="${entry.song.url}" target="_blank" style="color:#1DB954;">${entry.song.title} by ${entry.song.artist}</a></p>
-        ${entry.song.previewUrl ? `<audio controls src="${entry.song.previewUrl}"></audio>` : '<p style="color: red;">No preview available</p>'}
       </div>
     `
     : "";
@@ -185,7 +245,7 @@ function renderEntry(entry) {
     <p>${entry.text}</p>
     ${songHTML}
     <p>${generateStarsHTML(entry.rating || 0)}</p>
-    <div class="date-time">${entry.date}</div>
+    <p>${entry.date}</p>
     <button class="delete">Delete</button>
   `;
 
@@ -197,7 +257,6 @@ function renderEntry(entry) {
   entriesContainer.prepend(entryDiv);
 }
 
-// Generate Stars
 function generateStarsHTML(rating) {
   const maxStars = 5;
   return Array.from({ length: maxStars }, (_, i) =>
@@ -205,7 +264,6 @@ function generateStarsHTML(rating) {
   ).join("");
 }
 
-// Delete Entry
 function deleteEntry(id) {
   let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
   entries = entries.filter((entry) => entry.id !== id);
