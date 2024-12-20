@@ -66,6 +66,29 @@ body::-webkit-scrollbar {
   }
 }
 
+.connect-button {
+  font-size: 0.9rem;
+  padding: px 15px;
+  border-radius: 15px;
+  background: #1DB954;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+.connect-button:hover {
+  background: #14843C;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
 
 
 /* Journal Container */

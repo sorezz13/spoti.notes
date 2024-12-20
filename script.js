@@ -1,7 +1,4 @@
-// Spotify API Credentials
-const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38";
-const SPOTIFY_CLIENT_SECRET = "e70027250ac648eeb1695a6d85f44dc7";
-let spotifyAccessToken = "";
+
 
 // Selectors
 const addEntryBtn = document.getElementById("addEntryBtn");
