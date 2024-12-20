@@ -1,32 +1,10 @@
-
-
-
-
-
-
-
-
-
-
-   document.getElementById("connectSpotifyBtn").addEventListener("click", () => {
-      const clientId = "277d88e7a20b406f8d0b29111581da38";
-      const redirectUri = "https://sorezz13.github.io/spoti.notes/";
-      const scopes = "user-read-private user-read-email";
-      const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
-      window.location.href = authUrl;
-    });
-
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get("access_token");
-
-    if (accessToken) {
-      localStorage.setItem("spotifyAccessToken", accessToken);
-      console.log("Access token saved:", accessToken);
-
-
+// Spotify API Credentials
+const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Replace with your Spotify Client ID
+const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/"; // Replace with your app's Redirect URI
+let spotifyAccessToken = "";
 
 // Selectors
+const connectSpotifyBtn = document.getElementById("connectSpotifyBtn");
 const addEntryBtn = document.getElementById("addEntryBtn");
 const entryInput = document.getElementById("entry");
 const songSearchInput = document.getElementById("songSearch");
@@ -35,19 +13,40 @@ const selectedSongDisplay = document.getElementById("selectedSong");
 const ratingStars = document.getElementById("ratingStars");
 const entriesContainer = document.getElementById("entries");
 
-// Global Variables
-let selectedSong = null;
-let songRating = 0; // Rating out of 5 stars
-
-// Load Entries and Spotify Token on Page Load
+// Initialize App
 document.addEventListener("DOMContentLoaded", () => {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const newAccessToken = params.get("access_token");
+
+  if (newAccessToken) {
+    console.log("New Access Token:", newAccessToken); // Debugging
+    localStorage.setItem("spotifyAccessToken", newAccessToken);
+    spotifyAccessToken = newAccessToken;
+    connectSpotifyBtn.style.display = "none";
+
+    // Clean up the URL by removing the hash
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else {
+    spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
+    connectSpotifyBtn.style.display = spotifyAccessToken ? "none" : "block";
+  }
+
+  connectSpotifyBtn.addEventListener("click", () => {
+    const scopes = "user-read-private user-read-email";
+    const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+      REDIRECT_URI
+    )}&scope=${encodeURIComponent(scopes)}&show_dialog=true`; // Forces login
+    window.location.href = authUrl;
+  });
+
+  // Initialize other app components
   loadEntries();
-  getSpotifyAccessToken();
   setupStarRatings();
-  toggleSearchButton(); // Initially disable search if empty
+  toggleSearchButton();
 });
 
-\
+// Other Functions (searchSong, toggleSearchButton, etc.) remain unchanged
 
 // Function to Search for a Song on Spotify
 async function searchSong(query) {
@@ -105,7 +104,7 @@ searchSongBtn.addEventListener("click", async () => {
 // Disable Search Button when Input is Empty
 function toggleSearchButton() {
   songSearchInput.addEventListener("input", () => {
-    searchSongBtn.disabled = songSearchInput.value.trim() === "";
+    searchSongBtn.disabled = !songSearchInput.value.trim();
   });
 }
 
@@ -166,14 +165,6 @@ function loadEntries() {
   entries.forEach(renderEntry);
 }
 
-// Generate Stars
-function generateStarsHTML(rating) {
-  const maxStars = 5;
-  return Array.from({ length: maxStars }, (_, i) =>
-    `<span style="color: ${i < rating ? "#1DB954" : "#ccc"}; font-size: 1.2rem;">&#9733;</span>`
-  ).join("");
-}
-
 // Render Entry
 function renderEntry(entry) {
   const entryDiv = document.createElement("div");
@@ -206,6 +197,13 @@ function renderEntry(entry) {
   entriesContainer.prepend(entryDiv);
 }
 
+// Generate Stars
+function generateStarsHTML(rating) {
+  const maxStars = 5;
+  return Array.from({ length: maxStars }, (_, i) =>
+    `<span style="color: ${i < rating ? "#1DB954" : "#ccc"}; font-size: 1.2rem;">&#9733;</span>`
+  ).join("");
+}
 
 // Delete Entry
 function deleteEntry(id) {
@@ -213,5 +211,3 @@ function deleteEntry(id) {
   entries = entries.filter((entry) => entry.id !== id);
   localStorage.setItem("journalEntries", JSON.stringify(entries));
 }
-
-
