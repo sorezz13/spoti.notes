@@ -1,7 +1,20 @@
-// Spotify API Credentials
-const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38";
-const SPOTIFY_CLIENT_SECRET = "e70027250ac648eeb1695a6d85f44dc7";
-let spotifyAccessToken = "";
+    document.getElementById("connectSpotifyBtn").addEventListener("click", () => {
+      const clientId = "277d88e7a20b406f8d0b29111581da38";
+      const redirectUri = "https://sorezz13.github.io/spoti.notes/";
+      const scopes = "user-read-private user-read-email";
+      const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+      window.location.href = authUrl;
+    });
+
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get("access_token");
+
+    if (accessToken) {
+      localStorage.setItem("spotifyAccessToken", accessToken);
+      console.log("Access token saved:", accessToken);
+
+
 
 // Selectors
 const addEntryBtn = document.getElementById("addEntryBtn");

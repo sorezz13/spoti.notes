@@ -1,74 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>spoti.notes</title>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="spoti.notes">
-  
-  
-  
-  
-  
-  </head>
-  <body>
-  <!-- Header -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>spoti.notes</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="spoti.notes">
+</head>
+<body>
   <header class="header">
     <h1>spoti.notes</h1>
+    <button id="connectSpotifyBtn" class="connect-button">Connect Spotify</button>
   </header>
 
-  <!-- Journal Container -->
   <div class="journal-container">
-    <!-- Journal Entry Form -->
     <div class="form">
-      <!-- Journal Entry Input -->
       <textarea id="entry" placeholder="Write your thoughts here..."></textarea>
 
-      <!-- Song Search Section -->
       <div class="song-search-container">
-        <input 
-          type="text" 
-          id="songSearch" 
-          placeholder="Search for a song of the day...">
+        <input type="text" id="songSearch" placeholder="Search for a song of the day...">
         <button id="searchSongBtn">Search Song</button>
       </div>
 
-      <!-- Display Selected Song -->
       <div id="selectedSong" class="song-info"></div>
 
-      <!-- Star Rating -->
       <div class="rating-container" id="ratingContainer">
         <p>Rate this song</p>
         <div id="ratingStars" class="stars">
-          <span data-value="1">★</span>
-          <span data-value="2">★</span>
-          <span data-value="3">★</span>
-          <span data-value="4">★</span>
-          <span data-value="5">★</span>
+          <span data-value="1">&#9733;</span>
+          <span data-value="2">&#9733;</span>
+          <span data-value="3">&#9733;</span>
+          <span data-value="4">&#9733;</span>
+          <span data-value="5">&#9733;</span>
         </div>
       </div>
 
-      <!-- Add Entry Button -->
       <div class="button-container">
         <button id="addEntryBtn">Add Entry</button>
       </div>
     </div>
 
-    <!-- Journal Entries Section -->
     <div class="journal-entries" id="entries"></div>
   </div>
 
-  <!-- JavaScript -->
   <script src="script.js"></script>
+  <script>
+
+    }
+  </script>
 </body>
 </html>
