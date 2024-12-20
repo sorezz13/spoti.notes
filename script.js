@@ -1,20 +1,3 @@
-       document.getElementById("connectSpotifyBtn").addEventListener("click", () => {
-      const clientId = "277d88e7a20b406f8d0b29111581da38";
-      const redirectUri = "https://sorezz13.github.io/spoti.notes/";
-      const scopes = "user-read-private user-read-email";
-      const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
-      window.location.href = authUrl;
-    });
-
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get("access_token");
-
-    if (accessToken) {
-      localStorage.setItem("spotifyAccessToken", accessToken);
-      console.log("Access token saved:", accessToken);
-    }
-
 
 
 
@@ -64,24 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   toggleSearchButton(); // Initially disable search if empty
 });
 
-// Function to Fetch Spotify Access Token
-async function getSpotifyAccessToken() {
-  try {
-    const response = await fetch("https://accounts.spotify.com/api/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: "Basic " + btoa(SPOTIFY_CLIENT_ID + ":" + SPOTIFY_CLIENT_SECRET),
-      },
-      body: "grant_type=client_credentials",
-    });
-
-    const data = await response.json();
-    spotifyAccessToken = data.access_token;
-  } catch (error) {
-    console.error("Error fetching Spotify access token:", error);
-  }
-}
+\
 
 // Function to Search for a Song on Spotify
 async function searchSong(query) {
