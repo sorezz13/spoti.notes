@@ -291,6 +291,22 @@ button.delete:hover {
   }
 }
 
+#suggestionsContainer {
+  position: absolute;
+  top: 300px;
+  max-height: 300px;
+  overflow-y: auto; /* Enable scrolling for long lists */
+  background-color: #2e2e2e;
+  color: #e6e6e6;
+  z-index: 1000;
+  border: 1px solid #444;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Optional for better visibility */
+}
+
+
+
+
 .suggestion-item {
   cursor: pointer;
   padding: 10px;
@@ -308,15 +324,17 @@ button.delete:hover {
 
 #removeSelectedSong {
   margin-top: 10px;
-  background-color: #ff0000; /* Default red color */
+  background-color: #ff0000 !important; /* Default red color */
   color: white;
   padding: 10px;
   border: none;
-  border-radius: 5px;
+
+
+  border-radius: 500px !important;
   cursor: pointer;
-  transition: background-color 0.3s ease; /* Smooth transition */
+  transition: background-color 0.3s ease !important; /* Smooth transition */
 }
 
 #removeSelectedSong:hover {
-  background-color: #1DB954; /* Spotify green on hover */
+  background-color: #1DB954 !important; /* Spotify green on hover */
 }

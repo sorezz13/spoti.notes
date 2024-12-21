@@ -142,7 +142,9 @@ function renderSuggestions(suggestions) {
     )
     .join("");
 
-  const suggestionItems = document.querySelectorAll(".suggestion-item");
+ 
+ 
+    const suggestionItems = document.querySelectorAll(".suggestion-item");
   suggestionItems.forEach((item, index) => {
     item.addEventListener("click", () => {
       const selected = suggestions[index];
@@ -158,13 +160,7 @@ function renderSuggestions(suggestions) {
       suggestionsContainer.style.display = "none";
 
       const removeButton = document.getElementById("removeSelectedSong");
-      removeButton.addEventListener("mouseover", () => {
-        removeButton.style.backgroundColor = "#ff5f5f";
-      });
-      removeButton.addEventListener("mouseout", () => {
-        removeButton.style.backgroundColor = "#ff0000";
-      });
-
+      
       removeButton.addEventListener("click", () => {
         selectedSong = null;
         selectedSongDisplay.innerHTML = "";
@@ -173,6 +169,9 @@ function renderSuggestions(suggestions) {
     });
   });
 }
+
+
+
 
 function setupStarRatings() {
   ratingStars.addEventListener("click", (e) => {
