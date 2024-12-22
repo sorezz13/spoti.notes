@@ -2,8 +2,68 @@
 const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Replace with your Spotify Client ID
 const REDIRECT_URI = "https://sorezz13.github.io/spoti.notes/"; // Replace with your app's Redirect URI
 let spotifyAccessToken = "";
-let selectedSong = null; // Global state for the selected song
-let songRating = 0; // Global state for the selected rating
+
+// Fetch and Display User Name
+function fetchUserName() {
+  if (!spotifyAccessToken) return;
+
+  fetch("https://api.spotify.com/v1/me", {
+    headers: {
+      Authorization: `Bearer ${spotifyAccessToken}`,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      const userName = data.display_name || "User";
+      displayUserName(userName);
+    })
+    .catch((error) => {
+      console.error("Error fetching user profile:", error);
+    });
+}
+
+function displayUserName(userName) {
+  const header = document.querySelector(".header");
+
+  // Remove any existing greeting
+  const existingGreeting = header.querySelector("h2");
+  if (existingGreeting) {
+    existingGreeting.remove();
+  }
+
+  const greeting = document.createElement("h2");
+  greeting.textContent = `Hi, ${userName}`;
+  greeting.style.color = "#1DB954"; // Optional: Style the text
+  header.appendChild(greeting);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const newAccessToken = params.get("access_token");
+
+  if (newAccessToken) {
+    // Store the token and fetch the user's name
+    localStorage.setItem("spotifyAccessToken", newAccessToken);
+    spotifyAccessToken = newAccessToken;
+    connectSpotifyBtn.style.display = "none";
+    fetchUserName(); // Fetch and display the user's name
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else {
+    // Retrieve token from storage
+    spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
+
+    if (spotifyAccessToken) {
+      connectSpotifyBtn.style.display = "none";
+      fetchUserName(); // Fetch and display the user's name
+    } else {
+      connectSpotifyBtn.style.display = "block";
+    }
+  }
+});
+
+// Other existing functions and event listeners remain unchanged...
+
 
 // Selectors
 const connectSpotifyBtn = document.getElementById("connectSpotifyBtn");

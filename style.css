@@ -293,7 +293,7 @@ button.delete:hover {
 
 #suggestionsContainer {
   position: absolute;
-  top: 300px;
+  top: 350px;
   max-height: 300px;
   overflow-y: auto; /* Enable scrolling for long lists */
   background-color: #2e2e2e;
