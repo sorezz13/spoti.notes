@@ -1,6 +1,6 @@
 {
-    "name": "spoti.notes",
-    "short_name": "spoti.notes",
+    "name": "syncScribe",
+    "short_name": "syncScribe",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#000000",
