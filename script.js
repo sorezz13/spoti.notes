@@ -4,11 +4,17 @@ let selectedSong = null;
 let songRating = 0; // Declare globally to track the rating
 
 
+<<<<<<< Updated upstream
 
 // Initialize Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, query, where, doc, } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-auth.js";
+=======
+// Initialize Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, query, where, doc } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
+>>>>>>> Stashed changes
 
 
 const firebaseConfig = {
@@ -23,7 +29,10 @@ const firebaseConfig = {
 // Initialize Firebase and Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+<<<<<<< Updated upstream
 const auth = getAuth(); // Initialize Authentication
+=======
+>>>>>>> Stashed changes
 
 
 
@@ -35,7 +44,11 @@ const auth = getAuth(); // Initialize Authentication
 
 // Spotify API Credentials
 const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Replace with your Spotify Client ID
+<<<<<<< Updated upstream
 const REDIRECT_URI = "https://leelan.studio"; // Replace with your app's Redirect URI
+=======
+const REDIRECT_URI = "http://127.0.0.1:5500/"; // Replace with your app's Redirect URI
+>>>>>>> Stashed changes
 let spotifyAccessToken = "";
 
 
@@ -117,6 +130,7 @@ async function fetchUserName() {
 }
 
 
+<<<<<<< Updated upstream
 async function fetchSpotifyUserInfo(accessToken) {
   try {
     const response = await fetch("https://api.spotify.com/v1/me", {
@@ -140,6 +154,8 @@ async function fetchSpotifyUserInfo(accessToken) {
     return null;
   }
 }
+=======
+>>>>>>> Stashed changes
 
 
 
@@ -410,11 +426,19 @@ addEntryBtn.addEventListener("click", async () => {
 
 
 async function saveEntryToCloud(entry) {
+<<<<<<< Updated upstream
   const docRef = await addDoc(collection(db, "journalEntries"), {
     ...entry,
     userId, // Lowercase, consistent with Firestore
   });
   
+=======
+  const userId = localStorage.getItem("spotifyUserId");
+  if (!userId) {
+    console.error("User ID not available.");
+    return;
+  }
+>>>>>>> Stashed changes
 
   try {
     const docRef = await addDoc(collection(db, "journalEntries"), {
@@ -428,8 +452,14 @@ async function saveEntryToCloud(entry) {
 }
 
 
+<<<<<<< Updated upstream
 async function loadEntriesFromCloud() {
   const userId = localStorage.getItem("spotifyUserId"); // Retrieve Spotify user ID
+=======
+
+async function loadEntriesFromCloud() {
+  const userId = localStorage.getItem("spotifyUserId");
+>>>>>>> Stashed changes
   if (!userId) {
     console.error("User ID not available. Please log in.");
     return;
@@ -438,11 +468,19 @@ async function loadEntriesFromCloud() {
   try {
     const entriesQuery = query(
       collection(db, "journalEntries"),
+<<<<<<< Updated upstream
       where("userId", "==", userId) // Query by userId field
     );
 
     const querySnapshot = await getDocs(entriesQuery);
     entriesContainer.innerHTML = ""; // Clear existing entries
+=======
+      where("userId", "==", userId)
+    );
+
+    const querySnapshot = await getDocs(entriesQuery);
+    entriesContainer.innerHTML = ""; // Clear any existing entries
+>>>>>>> Stashed changes
     querySnapshot.forEach((doc) => {
       renderEntry({ id: doc.id, ...doc.data() }); // Render each entry
     });
@@ -452,7 +490,10 @@ async function loadEntriesFromCloud() {
 }
 
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 async function deleteEntryFromCloud(id) {
   try {
     await deleteDoc(doc(db, "journalEntries", id));
@@ -512,9 +553,36 @@ function generateStarsHTML(rating) {
 
 
 document.addEventListener("DOMContentLoaded", async () => {
+<<<<<<< Updated upstream
   await handleSpotifySignIn(); // Handle Spotify and Firebase sign-in
 });
 
+=======
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const newAccessToken = params.get("access_token");
+
+  if (newAccessToken) {
+    localStorage.setItem("spotifyAccessToken", newAccessToken);
+    spotifyAccessToken = newAccessToken;
+    console.log("New Access Token:", spotifyAccessToken);
+
+    await fetchUserName(); // Wait for user data to be fetched
+    await loadEntriesFromCloud(); // Load entries immediately after Spotify connection
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else {
+    spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
+    if (spotifyAccessToken) {
+      console.log("Stored Access Token:", spotifyAccessToken);
+
+      await fetchUserName();
+      await loadEntriesFromCloud();
+    } else {
+      console.error("Spotify access token not available.");
+    }
+  }
+});
+>>>>>>> Stashed changes
 
 
 
@@ -534,4 +602,7 @@ async function testFirestoreData() {
 
 // Call the test function
 testFirestoreData();
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
