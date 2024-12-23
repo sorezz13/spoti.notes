@@ -1,0 +1,340 @@
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: 'Poppins', sans-serif;
+  background: #1a1a1a;
+  color: #ffffff;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  padding: 0;
+  margin: 0;
+  text-align: center;
+}
+
+/* Hide Scrollbar for Chrome, Safari, and Edge */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Header */
+.header {
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  font-family: inherit; /* Keeps your default font */
+  margin-top: 30px;
+  text-transform: lowercase; /* Makes the text lowercase */
+  text-align: center;
+
+  /* Gradient Glow Effect with Lighter Green */
+  position: relative;
+  display: inline-block;
+
+  background-image: linear-gradient(
+    to right,
+    #1DB954, 
+    #80E6A2, /* Lighter version of green */
+    #1DB954
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text; /* For Safari support */
+  color: transparent;
+
+  /* Slower Animation */
+  animation: glowAnimation 6s infinite linear; /* Slower duration */
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Keyframes for glowing light */
+@keyframes glowAnimation {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.connect-button {
+  font-size: 0.9rem;
+  padding: px 15px;
+  border-radius: 15px;
+  background: #1DB954;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+.connect-button:hover {
+  background: #14843C;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+
+
+/* Journal Container */
+.journal-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0 10px; /* Prevent content from touching edges */
+}
+
+/* Journal Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #2e2e2e;
+  color: #e6e6e6;
+  font-size: 1rem;
+  resize: none; /* Prevent resizing */
+}
+
+textarea:focus {
+  outline: none;
+  border: 2px solid #1DB954;
+}
+
+/* Song Search Section */
+.song-search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  width: 100%;
+}
+
+#songSearch {
+  padding: 10px;
+  border-radius: 25px;
+  width: 100%;
+  border: 1px solid #444;
+  outline: none;
+}
+
+#songSearch:focus {
+  border: 2px solid #1DB954;
+}
+
+/* Buttons */
+button {
+  padding: 10px 20px;
+  font-size: 1.1rem;
+  color: #fff;
+  background: linear-gradient(135deg, #1DB954, #0e7a3f);
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin: 0 auto;
+  display: block;
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Selected Song Display */
+.song-info img {
+  margin-top: 10px;
+  border-radius: 10px;
+  width: 100px;
+}
+
+.rating-container {
+  text-align: center;
+  user-select: none;
+  ;
+}
+
+button:disabled {
+  background: #444;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Stars Container */
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 8px; /* Adjust spacing between stars */
+  font-size: 2.5rem; /* Set a consistent large size for stars */
+  cursor: pointer;
+}
+
+/* Star Individual Styling */
+.stars span {
+  color: #555; /* Default color for inactive stars */
+  transition: color 0.3s ease; /* Smooth color transition */
+}
+
+/* Active and Hover States */
+.stars span:hover,
+.stars span.active {
+  color: #1DB954; /* Spotify green for active stars */
+}
+
+
+
+/* Journal Entries */
+.journal-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+  font-family: inherit; /* Keeps your default font */
+}
+
+.entry {
+  background: #2e2e2e;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition */
+}
+
+.entry img {
+  width: 100px;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+.entry p {
+  margin: 10px 0;
+  color: #e6e6e6;
+  font-family: inherit; /* Keeps your default font */
+}
+
+.entry audio {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.date-time {
+  font-size: 0.8rem;
+  color: #b3b3b3;
+}
+
+button.delete {
+  background: #ff5f5f; /* Initial color */
+  margin-top: 10px;
+  transition: background 0.3s ease; /* Smooth transition for the background color */
+}
+
+button.delete:hover {
+  background: #1DB954; /* Color on hover */
+}
+
+
+  color: #1DB954;
+}
+
+
+/* Dissolve Animation */
+.entry:dissolve {
+  opacity: 0; /* Fade out */
+  transform: scale(0.8); /* Shrink slightly */
+  transition: opacity 3s ease, transform 3s ease; /* Smooth dissolve */
+}
+
+/* Responsive Design for Smaller Screens */
+@media (max-width: 600px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  textarea {
+    font-size: 0.9rem;
+  }
+
+  .stars {
+    font-size: 1.5rem;
+  }
+
+  button {
+    padding: 8px 15px;
+    font-size: 1rem;
+  }
+
+  .entry img {
+    width: 80px;
+  }
+}
+
+#suggestionsContainer {
+  position: absolute;
+  top: 350px;
+  max-height: 300px;
+  overflow-y: auto; /* Enable scrolling for long lists */
+  background-color: #2e2e2e;
+  color: #e6e6e6;
+  z-index: 1000;
+  border: 1px solid #444;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Optional for better visibility */
+}
+
+
+
+
+.suggestion-item {
+  cursor: pointer;
+  padding: 10px;
+  border-bottom: 1px solid #444;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.suggestion-item:hover {
+  background-color: #1DB954;
+  color: #fff;
+}
+
+
+#removeSelectedSong {
+  margin-top: 10px;
+  background-color: #ff0000 !important; /* Default red color */
+  color: white;
+  padding: 10px;
+  border: none;
+
+
+  border-radius: 500px !important;
+  cursor: pointer;
+  transition: background-color 0.3s ease !important; /* Smooth transition */
+}
+
+#removeSelectedSong:hover {
+  background-color: #1DB954 !important; /* Spotify green on hover */
+}
