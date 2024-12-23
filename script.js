@@ -35,7 +35,7 @@ const auth = getAuth(); // Initialize Authentication
 
 // Spotify API Credentials
 const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Replace with your Spotify Client ID
-const REDIRECT_URI = "http://127.0.0.1:5500/"; // Replace with your app's Redirect URI
+const REDIRECT_URI = "https://leelan.studio"; // Replace with your app's Redirect URI
 let spotifyAccessToken = "";
 
 
