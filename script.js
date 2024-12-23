@@ -1,26 +1,40 @@
+const entriesContainer = document.getElementById("entries");
+
+let selectedSong = null;
+let songRating = 0; // Declare globally to track the rating
+
+
+// Initialize Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, query, where, doc } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCmrSXbK58bsr54OGc9rywXWjL8lfYvufI",
+  authDomain: "syncscribe-2de6e.firebaseapp.com",
+  projectId: "syncscribe-2de6e",
+  storageBucket: "syncscribe-2de6e.firebasestorage.app",
+  messagingSenderId: "447987259771",
+  appId: "1:447987259771:web:4da231f069f78ea4be45de",
+  measurementId: "G-442X8YXXR7"
+};
+// Initialize Firebase and Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+
+
+
+
+
+
+
 // Spotify API Credentials
 const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Replace with your Spotify Client ID
 const REDIRECT_URI = "https://leelan.studio/"; // Replace with your app's Redirect URI
 let spotifyAccessToken = "";
 
-// Fetch and Display User Name
-function fetchUserName() {
-  if (!spotifyAccessToken) return;
-
-  fetch("https://api.spotify.com/v1/me", {
-    headers: {
-      Authorization: `Bearer ${spotifyAccessToken}`,
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      const userName = data.display_name || "User";
-      displayUserName(userName);
-    })
-    .catch((error) => {
-      console.error("Error fetching user profile:", error);
-    });
-}
 
 function displayUserName(userName) {
   const header = document.querySelector(".header");
@@ -64,6 +78,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Other existing functions and event listeners remain unchanged...
 
+async function fetchUserName() {
+  if (!spotifyAccessToken) {
+    console.error("No access token available.");
+    return;
+  }
+
+  try {
+    const response = await fetch("https://api.spotify.com/v1/me", {
+      headers: {
+        Authorization: `Bearer ${spotifyAccessToken}`,
+      },
+    });
+    const data = await response.json();
+    console.log("Spotify API Response:", data);
+
+    const userName = data.display_name || "User";
+    const userId = data.id; // Spotify user ID
+    console.log("Fetched User Name:", userName);
+    console.log("Fetched User ID:", userId);
+
+    if (userId) {
+      localStorage.setItem("spotifyUserId", userId); // Save Spotify user ID
+      displayUserName(userName);
+    } else {
+      console.error("User ID is missing in Spotify response.");
+    }
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+  }
+}
+
+
+
+
 
 // Selectors
 const connectSpotifyBtn = document.getElementById("connectSpotifyBtn");
@@ -72,7 +120,7 @@ const entryInput = document.getElementById("entry");
 const songSearchInput = document.getElementById("songSearch");
 const selectedSongDisplay = document.getElementById("selectedSong");
 const ratingStars = document.getElementById("ratingStars");
-const entriesContainer = document.getElementById("entries");
+
 const suggestionsContainer = document.createElement("div");
 suggestionsContainer.id = "suggestionsContainer";
 suggestionsContainer.style.position = "absolute";
@@ -123,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupSongSearch();
   setupStarRatings();
-  loadEntries();
+  loadEntriesFromCloud();
 });
 
 function checkAccessTokenExpiration() {
@@ -251,20 +299,24 @@ function updateStarColors() {
 }
 
 // Add New Entry
-addEntryBtn.addEventListener("click", () => {
+addEntryBtn.addEventListener("click", async () => {
+  const userId = localStorage.getItem("spotifyUserId");
+  if (!userId) {
+    return alert("Please connect your Spotify account first.");
+  }
+
   const text = entryInput.value.trim();
   if (!text) return alert("Please write something before adding an entry.");
   if (!selectedSong) return alert("Please select a song from the suggestions.");
 
   const newEntry = {
-    id: Date.now(),
     text,
     date: new Date().toLocaleString(),
     song: selectedSong,
     rating: songRating,
   };
 
-  saveEntryToLocalStorage(newEntry);
+  await saveEntryToCloud(newEntry);
   renderEntry(newEntry);
 
   entryInput.value = "";
@@ -272,19 +324,66 @@ addEntryBtn.addEventListener("click", () => {
   songSearchInput.value = "";
   selectedSong = null;
   songRating = 0;
-  updateStarColors();
 });
 
-function saveEntryToLocalStorage(entry) {
-  const entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
-  entries.push(entry);
-  localStorage.setItem("journalEntries", JSON.stringify(entries));
+
+async function saveEntryToCloud(entry) {
+  const userId = localStorage.getItem("spotifyUserId");
+  if (!userId) {
+    console.error("User ID not available.");
+    return;
+  }
+
+  try {
+    const docRef = await addDoc(collection(db, "journalEntries"), {
+      ...entry,
+      userId, // Tie the entry to the user
+    });
+    console.log("Entry saved with ID:", docRef.id);
+  } catch (error) {
+    console.error("Error saving entry:", error);
+  }
 }
 
-function loadEntries() {
-  const entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
-  entries.forEach(renderEntry);
+
+
+async function loadEntriesFromCloud() {
+  const userId = localStorage.getItem("spotifyUserId");
+  if (!userId) {
+    console.error("User ID not available. Please log in.");
+    return;
+  }
+
+  try {
+    const entriesQuery = query(
+      collection(db, "journalEntries"),
+      where("userId", "==", userId)
+    );
+
+    const querySnapshot = await getDocs(entriesQuery);
+    entriesContainer.innerHTML = ""; // Clear any existing entries
+    querySnapshot.forEach((doc) => {
+      renderEntry({ id: doc.id, ...doc.data() }); // Render each entry
+    });
+  } catch (error) {
+    console.error("Error loading entries:", error);
+  }
 }
+
+
+async function deleteEntryFromCloud(id) {
+  try {
+    await deleteDoc(doc(db, "journalEntries", id));
+    console.log("Entry deleted: ", id);
+  } catch (error) {
+    console.error("Error deleting entry: ", error);
+  }
+}
+
+
+
+
+
 
 function renderEntry(entry) {
   const entryDiv = document.createElement("div");
@@ -308,13 +407,17 @@ function renderEntry(entry) {
     <button class="delete">Delete</button>
   `;
 
-  entryDiv.querySelector(".delete").addEventListener("click", () => {
-    deleteEntry(entry.id);
+  entryDiv.querySelector(".delete").addEventListener("click", async () => {
+    await deleteEntryFromCloud(entry.id);
     entryDiv.remove();
   });
 
   entriesContainer.prepend(entryDiv);
 }
+
+  
+
+
 
 function generateStarsHTML(rating) {
   const maxStars = 5;
@@ -323,8 +426,50 @@ function generateStarsHTML(rating) {
   ).join("");
 }
 
-function deleteEntry(id) {
-  let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
-  entries = entries.filter((entry) => entry.id !== id);
-  localStorage.setItem("journalEntries", JSON.stringify(entries));
+
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const newAccessToken = params.get("access_token");
+
+  if (newAccessToken) {
+    localStorage.setItem("spotifyAccessToken", newAccessToken);
+    spotifyAccessToken = newAccessToken;
+    console.log("New Access Token:", spotifyAccessToken);
+
+    await fetchUserName(); // Wait for user data to be fetched
+    await loadEntriesFromCloud(); // Load entries immediately after Spotify connection
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else {
+    spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
+    if (spotifyAccessToken) {
+      console.log("Stored Access Token:", spotifyAccessToken);
+
+      await fetchUserName();
+      await loadEntriesFromCloud();
+    } else {
+      console.error("Spotify access token not available.");
+    }
+  }
+});
+
+
+
+
+// Test retrieving data
+async function testFirestoreData() {
+  try {
+    const querySnapshot = await getDocs(collection(db, "journalEntries"));
+    querySnapshot.forEach((doc) => {
+      console.log(`Document ID: ${doc.id}`);
+      console.log("Data:", doc.data());
+    });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
 }
+
+// Call the test function
+testFirestoreData();
