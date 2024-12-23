@@ -1,12 +1,16 @@
+// Initialize Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, query, where, doc } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
+
+
+
+
 const entriesContainer = document.getElementById("entries");
 
 let selectedSong = null;
 let songRating = 0; // Declare globally to track the rating
 
 
-// Initialize Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, query, where, doc } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
 
 
 const firebaseConfig = {
