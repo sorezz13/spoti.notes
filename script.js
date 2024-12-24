@@ -191,21 +191,25 @@ async function fetchUserName() {
 
     if (userId) {
       localStorage.setItem("spotifyUserId", userId); // Save Spotify user ID
-    
+
       // Derive and store the encryption key
       const derivedKey = await deriveKeyFromSpotify(userId);
       const exportedKey = await exportKey(derivedKey);
       localStorage.setItem("encryptionKey", exportedKey); // Store the key securely
-    
+
       // Debug: Log the stored key
       const encryptionKey = localStorage.getItem("encryptionKey");
       console.log("Stored Encryption Key:", encryptionKey);
-    
+
       displayUserName(userName);
     } else {
       console.error("User ID is missing in Spotify response.");
     }
-    
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+  }
+} // Close the fetchUserName function
+
 
 
 
@@ -610,6 +614,5 @@ async function testFirestoreData() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Your code here
   testFirestoreData();
 }); // Ensure this closing brace is present
