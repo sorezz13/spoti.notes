@@ -100,20 +100,29 @@ async function encryptData(key, data) {
 
 // Decrypt data using the derived key
 async function decryptData(key, ivArray, encryptedData) {
-  const iv = new Uint8Array(ivArray); // Convert IV back to Uint8Array
-  const encrypted = Uint8Array.from(atob(encryptedData), (c) => c.charCodeAt(0)); // Decode Base64
-  const decrypted = await window.crypto.subtle.decrypt(
-    {
-      name: "AES-CBC",
-      iv: iv,
-    },
-    key,
-    encrypted
-  );
+  try {
+    const iv = new Uint8Array(ivArray); // Convert IV back to Uint8Array
+    console.log("Decrypting with IV:", iv); // Debug: Log IV
+    console.log("Encrypted Data (Base64):", encryptedData); // Debug: Log encrypted data
 
-  const decoder = new TextDecoder();
-  return decoder.decode(decrypted); // Decode ArrayBuffer back to a string
+    const encrypted = Uint8Array.from(atob(encryptedData), (c) => c.charCodeAt(0)); // Decode Base64
+    const decrypted = await window.crypto.subtle.decrypt(
+      {
+        name: "AES-CBC",
+        iv: iv,
+      },
+      key,
+      encrypted
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted); // Decode ArrayBuffer back to a string
+  } catch (error) {
+    console.error("Decryption Error:", error);
+    throw error;
+  }
 }
+
 
 
 
@@ -168,7 +177,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Other existing functions and event listeners remain unchanged...
-
 async function fetchUserName() {
   if (!spotifyAccessToken) {
     console.error("No access token available.");
@@ -191,15 +199,9 @@ async function fetchUserName() {
 
     if (userId) {
       localStorage.setItem("spotifyUserId", userId); // Save Spotify user ID
-
-      // Derive and store the encryption key
       const derivedKey = await deriveKeyFromSpotify(userId);
       const exportedKey = await exportKey(derivedKey);
       localStorage.setItem("encryptionKey", exportedKey); // Store the key securely
-
-      // Debug: Log the stored key
-      const encryptionKey = localStorage.getItem("encryptionKey");
-      console.log("Stored Encryption Key:", encryptionKey);
 
       displayUserName(userName);
     } else {
@@ -208,7 +210,8 @@ async function fetchUserName() {
   } catch (error) {
     console.error("Error fetching user profile:", error);
   }
-} // Close the fetchUserName function
+}
+// Close the fetchUserName function
 
 
 
@@ -496,24 +499,55 @@ async function loadDecryptedEntriesFromFirebase() {
     );
 
     const querySnapshot = await getDocs(entriesQuery);
+    console.log("Fetched Entries:", querySnapshot.size); // Debug: Log the number of entries fetched
+
     entriesContainer.innerHTML = ""; // Clear any existing entries
 
     querySnapshot.forEach(async (doc) => {
       const data = doc.data();
+      console.log("Raw Entry Data:", data); // Debug: Log raw data before decryption
 
-      // Decrypt the text
-      const decryptedText = await decryptData(key, data.iv, data.text);
+      if (!data.iv || !data.text) {
+        console.error("Missing IV or text in entry:", data);
+        return;
+      }
 
-      // Render the entry
-      renderEntry({
-        ...data,
-        text: decryptedText, // Replace encrypted text with decrypted text
-      });
-    });
-  } catch (error) {
-    console.error("Error loading or decrypting entries:", error);
-  }
-}
+      try {
+        // Decrypt the text
+        const decryptedText = await decryptData(key, data.iv, data.text);
+        console.log("Decrypted Text:", decryptedText); // Debug: Log decrypted text
+
+        // Render the entry
+        function renderEntry(entry) {
+          const entryDiv = document.createElement("div");
+          entryDiv.classList.add("entry");
+          entryDiv.setAttribute("data-id", entry.id);
+        
+          const songHTML = entry.song
+            ? `
+              <div class="song">
+                <img src="${entry.song.albumArtwork}" alt="Album Artwork" style="width: 100px; border-radius: 10px;">
+                <p><a href="${entry.song.url}" target="_blank" style="color:#1DB954;">${entry.song.title} by ${entry.song.artist}</a></p>
+              </div>
+            `
+            : "";
+        
+          entryDiv.innerHTML = `
+            <p>${entry.text}</p>
+            ${songHTML}
+            <p>${generateStarsHTML(entry.rating || 0)}</p>
+            <p>${entry.date}</p>
+            <button class="delete">Delete</button>
+          `;
+        
+          entryDiv.querySelector(".delete").addEventListener("click", async () => {
+            await deleteEntryFromCloud(entry.id);
+            entryDiv.remove();
+          });
+        
+          entriesContainer.prepend(entryDiv);
+        }
+        
 
 
 
