@@ -693,3 +693,5 @@ async function testFirestoreData() {
 document.addEventListener("DOMContentLoaded", () => {
   testFirestoreData();
 }); // Ensure this closing brace is present
+
+

@@ -338,3 +338,33 @@ button.delete:hover {
 #removeSelectedSong:hover {
   background-color: #1DB954 !important; /* Spotify green on hover */
 }
+
+/* Navigation Buttons */
+nav {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 25px;
+  background: #1DB954;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.tab-button.active {
+  background: #14843C;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
