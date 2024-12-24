@@ -654,7 +654,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await fetchUserName(); // Fetch user details
 
     // Ensure all date fields are converted before loading entries
-    await convertDatesToTimestamps();
+    
 
     // Load and decrypt entries after conversion
     await loadDecryptedEntriesFromFirebase();
