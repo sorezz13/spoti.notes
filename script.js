@@ -427,7 +427,7 @@ addEntryBtn.addEventListener("click", async () => {
 
   const newEntry = {
     text,
-    date: new Date(), // Use the actual Date object
+    date: Timestamp.now(), // Use Firestore's Timestamp for compatibility
     song: selectedSong,
     rating: songRating,
     userId: userId, // Ensure userId is saved
@@ -435,22 +435,22 @@ addEntryBtn.addEventListener("click", async () => {
 
   try {
     console.log("New Entry Before Encryption:", newEntry);
-    await saveEncryptedEntryToCloud(newEntry); // Encrypt and save entry
+    await saveEncryptedEntryToCloud(newEntry); // Encrypt and save entry to Firestore
 
-    // Reset the input fields
+    // Reset input fields
     entryInput.value = "";
     selectedSongDisplay.innerHTML = "";
     songSearchInput.value = "";
     selectedSong = null;
     songRating = 0;
 
-    // Do NOT call loadDecryptedEntriesFromFirebase() manually here
-    alert("Entry added successfully!");
+    console.log("Entry added successfully!");
   } catch (error) {
     console.error("Error saving entry:", error);
     alert("Failed to save entry. Please try again.");
   }
 });
+
 
 
 
@@ -497,7 +497,7 @@ async function saveEncryptedEntryToCloud(entry) {
 
 import { orderBy } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
 
-let unsubscribe = null; // Variable to hold the unsubscribe function
+let unsubscribe = null;
 
 async function loadDecryptedEntriesFromFirebase() {
   const userId = localStorage.getItem("spotifyUserId");
@@ -518,7 +518,7 @@ async function loadDecryptedEntriesFromFirebase() {
     const entriesQuery = query(
       collection(db, "journalEntries"),
       where("userId", "==", userId),
-      orderBy("date", "desc") // Ensure the newest entries are fetched first
+      orderBy("date", "desc") // Fetch newest entries first
     );
 
     // Unsubscribe from any existing listener to prevent duplicates
@@ -526,10 +526,9 @@ async function loadDecryptedEntriesFromFirebase() {
       unsubscribe();
     }
 
-    // Set up the new onSnapshot listener
     unsubscribe = onSnapshot(entriesQuery, (querySnapshot) => {
-      console.log("Fetched Entries:", querySnapshot.size); // Debug
-      entriesContainer.innerHTML = ""; // Clear existing entries
+      console.log("Fetched Entries from Firestore:", querySnapshot.docs.map((doc) => doc.id)); // Debugging log
+      entriesContainer.innerHTML = ""; // Clear previous entries
 
       if (querySnapshot.empty) {
         entriesContainer.innerHTML = "<p>No entries found.</p>";
@@ -538,7 +537,7 @@ async function loadDecryptedEntriesFromFirebase() {
 
       querySnapshot.forEach(async (doc) => {
         const data = doc.data();
-        console.log("Raw Entry Data:", data); // Debug
+        console.log("Rendering Entry Data:", data); // Debug raw data
 
         if (!data.iv || !data.text) {
           console.error("Missing IV or text in entry:", data);
@@ -563,6 +562,7 @@ async function loadDecryptedEntriesFromFirebase() {
     console.error("Error loading or decrypting entries:", error);
   }
 }
+
 
 
 
