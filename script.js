@@ -656,18 +656,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     spotifyAccessToken = newAccessToken;
 
     await fetchUserName(); // Fetch user details
-    await loadDecryptedEntriesFromFirebase(); // Load and decrypt entries
+
+    // Ensure all date fields are converted before loading entries
+    await convertDatesToTimestamps();
+
+    // Load and decrypt entries after conversion
+    await loadDecryptedEntriesFromFirebase();
+
     window.history.replaceState({}, document.title, window.location.pathname);
   } else {
     spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
     if (spotifyAccessToken) {
       await fetchUserName();
+
+      // Ensure all date fields are converted before loading entries
+      await convertDatesToTimestamps();
+
+      // Load and decrypt entries after conversion
       await loadDecryptedEntriesFromFirebase();
     }
   }
 });
-
-
 
 
 
