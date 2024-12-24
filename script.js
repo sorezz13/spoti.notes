@@ -426,6 +426,7 @@ addEntryBtn.addEventListener("click", async () => {
     console.log("New Entry Before Encryption:", newEntry);
     await saveEncryptedEntryToCloud(newEntry); // Encrypt and save entry
 
+    // Reset the input fields
     entryInput.value = "";
     selectedSongDisplay.innerHTML = "";
     songSearchInput.value = "";
@@ -436,6 +437,7 @@ addEntryBtn.addEventListener("click", async () => {
     alert("Failed to save entry. Please try again.");
   }
 });
+
 
 
 
@@ -469,12 +471,17 @@ async function saveEncryptedEntryToCloud(entry) {
 
     console.log("Encrypted entry saved with ID:", docRef.id);
 
-    // Add document ID to the entry
-    entry.id = docRef.id; // Include the document ID for rendering
+    // Render the entry immediately
+    renderEntry({
+      ...entry,
+      id: docRef.id, // Include the document ID for deletion
+      text: entry.text, // Display unencrypted text
+    });
   } catch (error) {
     console.error("Error saving encrypted entry:", error);
   }
 }
+
 
 
 
