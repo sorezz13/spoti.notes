@@ -88,11 +88,15 @@ async function encryptData(key, data) {
     encoder.encode(data) // Encode the data into ArrayBuffer
   );
 
+  console.log("IV:", iv); // Debug
+  console.log("Encrypted ArrayBuffer:", encrypted); // Debug
+
   return {
     iv: Array.from(iv), // Convert IV to an array for storage
     encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))), // Base64 encode
   };
 }
+
 
 // Decrypt data using the derived key
 async function decryptData(key, ivArray, encryptedData) {
@@ -411,13 +415,19 @@ addEntryBtn.addEventListener("click", async () => {
     rating: songRating,
   };
 
-  await saveEncryptedEntryToCloud(newEntry); // Encrypt and save entry
+  try {
+    console.log("New Entry Before Encryption:", newEntry);
+    await saveEncryptedEntryToCloud(newEntry); // Encrypt and save entry
 
-  entryInput.value = "";
-  selectedSongDisplay.innerHTML = "";
-  songSearchInput.value = "";
-  selectedSong = null;
-  songRating = 0;
+    entryInput.value = "";
+    selectedSongDisplay.innerHTML = "";
+    songSearchInput.value = "";
+    selectedSong = null;
+    songRating = 0;
+  } catch (error) {
+    console.error("Error saving entry:", error);
+    alert("Failed to save entry. Please try again.");
+  }
 });
 
 
