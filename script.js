@@ -319,7 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupSongSearch();
   setupStarRatings();
-  loadEntriesFromCloud();
+  loadDecryptedEntriesFromFirebase();
 });
 
 function checkAccessTokenExpiration() {
@@ -677,6 +677,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 });
+
 
 
 
