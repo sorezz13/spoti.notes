@@ -427,9 +427,10 @@ addEntryBtn.addEventListener("click", async () => {
 
   const newEntry = {
     text,
-    date: new Date().toLocaleString(),
+    date: new Date(), // Use the actual Date object
     song: selectedSong,
     rating: songRating,
+    userId: userId, // Ensure userId is saved
   };
 
   try {
@@ -442,6 +443,9 @@ addEntryBtn.addEventListener("click", async () => {
     songSearchInput.value = "";
     selectedSong = null;
     songRating = 0;
+
+    // Do NOT call loadDecryptedEntriesFromFirebase() manually here
+    alert("Entry added successfully!");
   } catch (error) {
     console.error("Error saving entry:", error);
     alert("Failed to save entry. Please try again.");
