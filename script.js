@@ -1,7 +1,7 @@
 // Initialize Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, query, where, doc, onSnapshot, Timestamp, updateDoc} from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
-
+import { deriveKeyFromSpotify, encryptData, decryptData } from "./cryptoUtils";
 
 
 
@@ -26,112 +26,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-
-
-
-
-
-
-
-
-
-
-// Derive a key from the Spotify user ID
-
-async function deriveKeyFromSpotify(userId) {
-  const salt = "a-secure-static-salt"; // Use a secure and constant salt (store safely)
-  const iterations = 100000;          // Number of PBKDF2 iterations
-  const encoder = new TextEncoder();
-
-  // Import the user ID as key material
-  const keyMaterial = await window.crypto.subtle.importKey(
-    "raw",
-    encoder.encode(userId),
-    { name: "PBKDF2" },
-    false,
-    ["deriveKey"]
-  );
-
-  // Derive the encryption key
-  return await window.crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode(salt),
-      iterations: iterations,
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    { name: "AES-CBC", length: 256 },
-    true,
-    ["encrypt", "decrypt"]
-  );
-}
-
-// Export a derived key for storage (e.g., in localStorage or IndexedDB)
-async function exportKey(key) {
-  const rawKey = await crypto.subtle.exportKey("raw", key);
-  return btoa(String.fromCharCode(...new Uint8Array(rawKey))); // Convert to Base64
-}
-
-// Import a previously exported key (e.g., retrieve from localStorage)
-async function importKey(base64Key) {
-  const rawKey = Uint8Array.from(atob(base64Key), (c) => c.charCodeAt(0));
-  return await crypto.subtle.importKey(
-    "raw",
-    rawKey,
-    { name: "AES-CBC" },
-    true,
-    ["encrypt", "decrypt"]
-  );
-}
-
-// Encrypt data using the derived key
-async function encryptData(key, data) {
-  const iv = window.crypto.getRandomValues(new Uint8Array(16)); // Generate random IV
-  const encoder = new TextEncoder();
-  const encrypted = await window.crypto.subtle.encrypt(
-    {
-      name: "AES-CBC",
-      iv: iv, // Initialization Vector
-    },
-    key,
-    encoder.encode(data) // Encode the data into ArrayBuffer
-  );
-
-  console.log("IV:", iv); // Debug
-  console.log("Encrypted ArrayBuffer:", encrypted); // Debug
-
-  return {
-    iv: Array.from(iv), // Convert IV to an array for storage
-    encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))), // Base64 encode
-  };
-}
-
-
-// Decrypt data using the derived key
-async function decryptData(key, ivArray, encryptedData) {
-  try {
-    const iv = new Uint8Array(ivArray); // Convert IV back to Uint8Array
-    console.log("Decrypting with IV:", iv); // Debug: Log IV
-    console.log("Encrypted Data (Base64):", encryptedData); // Debug: Log encrypted data
-
-    const encrypted = Uint8Array.from(atob(encryptedData), (c) => c.charCodeAt(0)); // Decode Base64
-    const decrypted = await window.crypto.subtle.decrypt(
-      {
-        name: "AES-CBC",
-        iv: iv,
-      },
-      key,
-      encrypted
-    );
-
-    const decoder = new TextDecoder();
-    return decoder.decode(decrypted); // Decode ArrayBuffer back to a string
-  } catch (error) {
-    console.error("Decryption Error:", error);
-    throw error;
-  }
-}
 
 
 
