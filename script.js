@@ -27,6 +27,89 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
+// Derive a key from the Spotify user ID
+async function deriveKeyFromSpotify(userId) {
+  const salt = "a-secure-static-salt"; // Use a secure and constant salt (store safely)
+  const iterations = 100000;          // Number of PBKDF2 iterations
+  const encoder = new TextEncoder();
+
+  // Import the user ID as key material
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    encoder.encode(userId),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  // Derive the encryption key
+  return await window.crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(salt),
+      iterations: iterations,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    { name: "AES-CBC", length: 256 },
+    true,
+    ["encrypt", "decrypt"]
+  );
+}
+
+// Export a derived key for storage (e.g., in localStorage or IndexedDB)
+async function exportKey(key) {
+  const rawKey = await crypto.subtle.exportKey("raw", key);
+  return btoa(String.fromCharCode(...new Uint8Array(rawKey))); // Convert to Base64
+}
+
+// Import a previously exported key (e.g., retrieve from localStorage)
+async function importKey(base64Key) {
+  const rawKey = Uint8Array.from(atob(base64Key), (c) => c.charCodeAt(0));
+  return await crypto.subtle.importKey(
+    "raw",
+    rawKey,
+    { name: "AES-CBC" },
+    true,
+    ["encrypt", "decrypt"]
+  );
+}
+
+// Encrypt data using the derived key
+async function encryptData(key, data) {
+  const iv = window.crypto.getRandomValues(new Uint8Array(16)); // Generate random IV
+  const encoder = new TextEncoder();
+  const encrypted = await window.crypto.subtle.encrypt(
+    {
+      name: "AES-CBC",
+      iv: iv, // Initialization Vector
+    },
+    key,
+    encoder.encode(data) // Encode the data into ArrayBuffer
+  );
+
+  return {
+    iv: Array.from(iv), // Convert IV to an array for storage
+    encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))), // Base64 encode
+  };
+}
+
+// Decrypt data using the derived key
+async function decryptData(key, ivArray, encryptedData) {
+  const iv = new Uint8Array(ivArray); // Convert IV back to Uint8Array
+  const encrypted = Uint8Array.from(atob(encryptedData), (c) => c.charCodeAt(0)); // Decode Base64
+  const decrypted = await window.crypto.subtle.decrypt(
+    {
+      name: "AES-CBC",
+      iv: iv,
+    },
+    key,
+    encrypted
+  );
+
+  const decoder = new TextDecoder();
+  return decoder.decode(decrypted); // Decode ArrayBuffer back to a string
+}
 
 
 
@@ -104,14 +187,22 @@ async function fetchUserName() {
 
     if (userId) {
       localStorage.setItem("spotifyUserId", userId); // Save Spotify user ID
+    
+      // Derive and store the encryption key
+      const derivedKey = await deriveKeyFromSpotify(userId);
+      const exportedKey = await exportKey(derivedKey);
+      localStorage.setItem("encryptionKey", exportedKey); // Store the key securely
+    
+      // Debug: Log the stored key
+      const encryptionKey = localStorage.getItem("encryptionKey");
+      console.log("Stored Encryption Key:", encryptionKey);
+    
       displayUserName(userName);
     } else {
       console.error("User ID is missing in Spotify response.");
     }
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-  }
-}
+    
+
 
 
 
@@ -320,8 +411,7 @@ addEntryBtn.addEventListener("click", async () => {
     rating: songRating,
   };
 
-  await saveEntryToCloud(newEntry);
-  renderEntry(newEntry);
+  await saveEncryptedEntryToCloud(newEntry); // Encrypt and save entry
 
   entryInput.value = "";
   selectedSongDisplay.innerHTML = "";
@@ -331,32 +421,59 @@ addEntryBtn.addEventListener("click", async () => {
 });
 
 
-async function saveEntryToCloud(entry) {
+
+async function saveEncryptedEntryToCloud(entry) {
   const userId = localStorage.getItem("spotifyUserId");
   if (!userId) {
     console.error("User ID not available.");
     return;
   }
 
+  // Retrieve the encryption key
+  const encryptionKey = localStorage.getItem("encryptionKey");
+  if (!encryptionKey) {
+    console.error("Encryption key not found.");
+    return;
+  }
+
+  const key = await importKey(encryptionKey);
+
   try {
+    // Encrypt the entry text
+    const encryptedText = await encryptData(key, entry.text);
+
+    // Save the entry to Firebase with encrypted text
     const docRef = await addDoc(collection(db, "journalEntries"), {
       ...entry,
-      userId, // Tie the entry to the user
+      text: encryptedText.encrypted, // Save encrypted text
+      iv: encryptedText.iv,         // Save the IV for decryption
+      userId,                       // Tie the entry to the user
     });
-    console.log("Entry saved with ID:", docRef.id);
+
+    console.log("Encrypted entry saved with ID:", docRef.id);
   } catch (error) {
-    console.error("Error saving entry:", error);
+    console.error("Error saving encrypted entry:", error);
   }
 }
 
 
 
-async function loadEntriesFromCloud() {
+
+async function loadDecryptedEntriesFromFirebase() {
   const userId = localStorage.getItem("spotifyUserId");
   if (!userId) {
     console.error("User ID not available. Please log in.");
     return;
   }
+
+  // Retrieve the encryption key from localStorage
+  const encryptionKey = localStorage.getItem("encryptionKey");
+  if (!encryptionKey) {
+    console.error("Encryption key not found.");
+    return;
+  }
+
+  const key = await importKey(encryptionKey);
 
   try {
     const entriesQuery = query(
@@ -366,13 +483,24 @@ async function loadEntriesFromCloud() {
 
     const querySnapshot = await getDocs(entriesQuery);
     entriesContainer.innerHTML = ""; // Clear any existing entries
-    querySnapshot.forEach((doc) => {
-      renderEntry({ id: doc.id, ...doc.data() }); // Render each entry
+
+    querySnapshot.forEach(async (doc) => {
+      const data = doc.data();
+
+      // Decrypt the text
+      const decryptedText = await decryptData(key, data.iv, data.text);
+
+      // Render the entry
+      renderEntry({
+        ...data,
+        text: decryptedText, // Replace encrypted text with decrypted text
+      });
     });
   } catch (error) {
-    console.error("Error loading entries:", error);
+    console.error("Error loading or decrypting entries:", error);
   }
 }
+
 
 
 async function deleteEntryFromCloud(id) {
@@ -441,23 +569,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (newAccessToken) {
     localStorage.setItem("spotifyAccessToken", newAccessToken);
     spotifyAccessToken = newAccessToken;
-    console.log("New Access Token:", spotifyAccessToken);
 
-    await fetchUserName(); // Wait for user data to be fetched
-    await loadEntriesFromCloud(); // Load entries immediately after Spotify connection
+    await fetchUserName(); // Fetch user details
+    await loadDecryptedEntriesFromFirebase(); // Load and decrypt entries
     window.history.replaceState({}, document.title, window.location.pathname);
   } else {
     spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
     if (spotifyAccessToken) {
-      console.log("Stored Access Token:", spotifyAccessToken);
-
       await fetchUserName();
-      await loadEntriesFromCloud();
-    } else {
-      console.error("Spotify access token not available.");
+      await loadDecryptedEntriesFromFirebase();
     }
   }
 });
+
 
 
 
@@ -477,3 +601,6 @@ async function testFirestoreData() {
 
 // Call the test function
 testFirestoreData();
+
+
+
