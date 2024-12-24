@@ -607,6 +607,12 @@ function renderEntry(entry) {
   entryDiv.classList.add("entry");
   entryDiv.setAttribute("data-id", entry.id); // Set the document ID
 
+  // Format the date if it's a Firestore Timestamp
+  const formattedDate =
+    entry.date instanceof Object && entry.date.seconds
+      ? new Date(entry.date.seconds * 1000).toLocaleString() // Convert to a readable format
+      : entry.date;
+
   const songHTML = entry.song
     ? `
       <div class="song">
@@ -620,7 +626,7 @@ function renderEntry(entry) {
     <p>${entry.text}</p>
     ${songHTML}
     <p>${generateStarsHTML(entry.rating || 0)}</p>
-    <p>${entry.date}</p>
+    <p>${formattedDate}</p> <!-- Use the formatted date here -->
     <button class="delete">Delete</button>
   `;
 
@@ -633,6 +639,7 @@ function renderEntry(entry) {
 
   entriesContainer.prepend(entryDiv);
 }
+
 
 
   
