@@ -609,8 +609,5 @@ async function testFirestoreData() {
   }
 }
 
-// Call the test function
-testFirestoreData();
 
-
-
+  
