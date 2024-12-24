@@ -481,6 +481,8 @@ async function saveEncryptedEntryToCloud(entry) {
 
 
 
+import { query, collection, where, onSnapshot } from "firebase/firestore";
+
 async function loadDecryptedEntriesFromFirebase() {
   const userId = localStorage.getItem("spotifyUserId");
   if (!userId) {
@@ -488,7 +490,6 @@ async function loadDecryptedEntriesFromFirebase() {
     return;
   }
 
-  // Retrieve the encryption key from localStorage
   const encryptionKey = localStorage.getItem("encryptionKey");
   if (!encryptionKey) {
     console.error("Encryption key not found.");
@@ -503,47 +504,38 @@ async function loadDecryptedEntriesFromFirebase() {
       where("userId", "==", userId)
     );
 
-    // Listen for real-time updates
     onSnapshot(entriesQuery, (querySnapshot) => {
-      console.log("Fetched Entries:", querySnapshot.size); // Debug: Log the number of entries fetched
+      console.log("Fetched Entries:", querySnapshot.size); // Debug
+      entriesContainer.innerHTML = ""; // Clear existing entries
 
-      // Clear existing entries
-      entriesContainer.innerHTML = "";
-
-      // Sort entries by date before rendering
-      const sortedEntries = [];
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach(async (doc) => {
         const data = doc.data();
-        sortedEntries.push({ ...data, id: doc.id });
+        console.log("Raw Entry Data:", data); // Debug
+
+        if (!data.iv || !data.text) {
+          console.error("Missing IV or text in entry:", data);
+          return;
+        }
+
+        try {
+          const decryptedText = await decryptData(key, data.iv, data.text);
+          console.log("Decrypted Text:", decryptedText);
+
+          renderEntry({
+            ...data,
+            text: decryptedText,
+            id: doc.id,
+          });
+        } catch (decryptionError) {
+          console.error("Error decrypting entry:", decryptionError);
+        }
       });
-
-      sortedEntries
-        .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort by date descending
-        .forEach(async (entry) => {
-          if (!entry.iv || !entry.text) {
-            console.error("Missing IV or text in entry:", entry);
-            return;
-          }
-
-          try {
-            // Decrypt the text
-            const decryptedText = await decryptData(key, entry.iv, entry.text);
-            console.log("Decrypted Text:", decryptedText); // Debug: Log decrypted text
-
-            // Render the entry
-            renderEntry({
-              ...entry,
-              text: decryptedText, // Replace encrypted text with decrypted text
-            });
-          } catch (decryptionError) {
-            console.error("Error decrypting entry:", decryptionError);
-          }
-        });
     });
   } catch (error) {
     console.error("Error loading or decrypting entries:", error);
   }
 }
+
 
 
         
