@@ -609,5 +609,7 @@ async function testFirestoreData() {
   }
 }
 
-
-  
+document.addEventListener("DOMContentLoaded", () => {
+  // Your code here
+  testFirestoreData();
+}); // Ensure this closing brace is present
