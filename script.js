@@ -1,6 +1,6 @@
 // Initialize Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, query, where, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, query, where, doc, onSnapshot, } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
 
 
 
@@ -481,6 +481,8 @@ async function saveEncryptedEntryToCloud(entry) {
 
 
 
+import { orderBy } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
+
 async function loadDecryptedEntriesFromFirebase() {
   const userId = localStorage.getItem("spotifyUserId");
   if (!userId) {
@@ -499,7 +501,8 @@ async function loadDecryptedEntriesFromFirebase() {
   try {
     const entriesQuery = query(
       collection(db, "journalEntries"),
-      where("userId", "==", userId)
+      where("userId", "==", userId),
+      orderBy("date", "desc") // Order entries by date in descending order
     );
 
     onSnapshot(entriesQuery, (querySnapshot) => {
@@ -533,6 +536,7 @@ async function loadDecryptedEntriesFromFirebase() {
     console.error("Error loading or decrypting entries:", error);
   }
 }
+
 
 
 
