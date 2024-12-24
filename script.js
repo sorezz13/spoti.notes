@@ -28,7 +28,7 @@ const db = getFirestore(app);
 
 
 
-// Function to convert string dates to Firestore Timestamps
+
 
 
 
@@ -140,11 +140,11 @@ async function decryptData(key, ivArray, encryptedData) {
 
 
 // Spotify API Credentials
-const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Replace with your Spotify Client ID
-const REDIRECT_URI = "https://leelan.studio/"; // Replace with your app's Redirect URI
+const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38";
+const REDIRECT_URI = "https://leelan.studio/";
 let spotifyAccessToken = "";
 
-// Button Selectors for Both Screens
+// Button Selectors
 const connectSpotifyBtnJournal = document.getElementById("connectSpotifyBtnJournal");
 const connectSpotifyBtnStats = document.getElementById("connectSpotifyBtnStats");
 
@@ -158,20 +158,17 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("spotifyAccessToken", newAccessToken);
     spotifyAccessToken = newAccessToken;
     hideSpotifyButtons();
-    fetchUserName();
-    window.history.replaceState({}, document.title, window.location.pathname);
   } else {
     spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
     if (spotifyAccessToken) {
       hideSpotifyButtons();
-      fetchUserName();
     } else {
       showSpotifyButtons();
     }
   }
 });
 
-// Spotify OAuth Logic
+// Redirect to Spotify Authorization
 function redirectToSpotifyAuth() {
   const scopes = "user-read-private user-read-email user-top-read";
   const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${encodeURIComponent(
@@ -180,51 +177,20 @@ function redirectToSpotifyAuth() {
   window.location.href = authUrl;
 }
 
-// Hide Spotify Buttons
+// Show/Hide Spotify Buttons
 function hideSpotifyButtons() {
   connectSpotifyBtnJournal.style.display = "none";
   connectSpotifyBtnStats.style.display = "none";
 }
 
-// Show Spotify Buttons
 function showSpotifyButtons() {
   connectSpotifyBtnJournal.style.display = "block";
   connectSpotifyBtnStats.style.display = "block";
 }
 
-// Fetch User Name from Spotify API
-async function fetchUserName() {
-  try {
-    const response = await fetch("https://api.spotify.com/v1/me", {
-      headers: {
-        Authorization: `Bearer ${spotifyAccessToken}`,
-      },
-    });
-    const data = await response.json();
-    const userName = data.display_name || "User";
-    displayUserName(userName);
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-  }
-}
-
-// Display User Name on the Header
-function displayUserName(userName) {
-  const header = document.querySelector(".header");
-  const existingGreeting = header.querySelector("h2");
-  if (existingGreeting) existingGreeting.remove();
-
-  const greeting = document.createElement("h2");
-  greeting.textContent = `Hi, ${userName}`;
-  greeting.style.color = "#1DB954";
-  header.appendChild(greeting);
-}
-
-// Attach Event Listeners to Both Buttons
+// Add Event Listeners
 connectSpotifyBtnJournal.addEventListener("click", redirectToSpotifyAuth);
 connectSpotifyBtnStats.addEventListener("click", redirectToSpotifyAuth);
-
-
 
 
 
