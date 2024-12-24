@@ -27,7 +27,49 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
+
+// Function to convert string dates to Firestore Timestamps
+async function convertDatesToTimestamps() {
+  try {
+    const entriesQuery = collection(db, "journalEntries");
+    const querySnapshot = await getDocs(entriesQuery);
+
+    querySnapshot.forEach(async (docSnapshot) => {
+      const data = docSnapshot.data();
+
+      // Check if `date` is a string
+      if (typeof data.date === "string") {
+        try {
+          const parsedDate = new Date(data.date); // Parse the string into a JavaScript Date
+          if (!isNaN(parsedDate.getTime())) {
+            await updateDoc(doc(db, "journalEntries", docSnapshot.id), {
+              date: Timestamp.fromDate(parsedDate), // Convert to Firestore Timestamp
+            });
+            console.log(`Document ${docSnapshot.id} updated successfully.`);
+          } else {
+            console.error(`Invalid date format for document ${docSnapshot.id}`);
+          }
+        } catch (error) {
+          console.error(`Error updating document ${docSnapshot.id}:`, error);
+        }
+      } else {
+        console.log(`Document ${docSnapshot.id} already has a Timestamp.`);
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching documents:", error);
+  }
+}
+
+// Run the conversion function
+convertDatesToTimestamps();
+
+
+
+
+
 // Derive a key from the Spotify user ID
+
 async function deriveKeyFromSpotify(userId) {
   const salt = "a-secure-static-salt"; // Use a secure and constant salt (store safely)
   const iterations = 100000;          // Number of PBKDF2 iterations
