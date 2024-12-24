@@ -468,10 +468,14 @@ async function saveEncryptedEntryToCloud(entry) {
     });
 
     console.log("Encrypted entry saved with ID:", docRef.id);
+
+    // Add document ID to the entry
+    entry.id = docRef.id; // Include the document ID for rendering
   } catch (error) {
     console.error("Error saving encrypted entry:", error);
   }
 }
+
 
 
 
@@ -518,35 +522,20 @@ async function loadDecryptedEntriesFromFirebase() {
         console.log("Decrypted Text:", decryptedText); // Debug: Log decrypted text
 
         // Render the entry
-        function renderEntry(entry) {
-          const entryDiv = document.createElement("div");
-          entryDiv.classList.add("entry");
-          entryDiv.setAttribute("data-id", entry.id);
-        
-          const songHTML = entry.song
-            ? `
-              <div class="song">
-                <img src="${entry.song.albumArtwork}" alt="Album Artwork" style="width: 100px; border-radius: 10px;">
-                <p><a href="${entry.song.url}" target="_blank" style="color:#1DB954;">${entry.song.title} by ${entry.song.artist}</a></p>
-              </div>
-            `
-            : "";
-        
-          entryDiv.innerHTML = `
-            <p>${entry.text}</p>
-            ${songHTML}
-            <p>${generateStarsHTML(entry.rating || 0)}</p>
-            <p>${entry.date}</p>
-            <button class="delete">Delete</button>
-          `;
-        
-          entryDiv.querySelector(".delete").addEventListener("click", async () => {
-            await deleteEntryFromCloud(entry.id);
-            entryDiv.remove();
-          });
-        
-          entriesContainer.prepend(entryDiv);
-        }
+        renderEntry({
+          ...data,
+          text: decryptedText, // Replace encrypted text with decrypted text
+          id: doc.id,          // Include document ID
+        });
+      } catch (decryptionError) {
+        console.error("Error decrypting entry:", decryptionError);
+      }
+    });
+  } catch (error) {
+    console.error("Error loading or decrypting entries:", error);
+  }
+}
+
         
 
 
@@ -568,7 +557,7 @@ async function deleteEntryFromCloud(id) {
 function renderEntry(entry) {
   const entryDiv = document.createElement("div");
   entryDiv.classList.add("entry");
-  entryDiv.setAttribute("data-id", entry.id);
+  entryDiv.setAttribute("data-id", entry.id); // Set the document ID
 
   const songHTML = entry.song
     ? `
@@ -587,9 +576,11 @@ function renderEntry(entry) {
     <button class="delete">Delete</button>
   `;
 
+  // Add delete button functionality
   entryDiv.querySelector(".delete").addEventListener("click", async () => {
-    await deleteEntryFromCloud(entry.id);
-    entryDiv.remove();
+    const entryId = entryDiv.getAttribute("data-id"); // Retrieve the document ID
+    await deleteEntryFromCloud(entryId); // Pass the ID to the delete function
+    entryDiv.remove(); // Remove from the UI
   });
 
   entriesContainer.prepend(entryDiv);
