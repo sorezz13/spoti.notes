@@ -4,13 +4,8 @@ const statsTab = document.getElementById("statsTab");
 const journalSection = document.getElementById("journalSection");
 const statsSection = document.getElementById("statsSection");
 
-journalTab.addEventListener("click", () => {
-  toggleTab("journal");
-});
-
-statsTab.addEventListener("click", () => {
-  toggleTab("stats");
-});
+journalTab.addEventListener("click", () => toggleTab("journal"));
+statsTab.addEventListener("click", () => toggleTab("stats"));
 
 function toggleTab(tab) {
   if (tab === "journal") {
@@ -31,7 +26,7 @@ const topList = document.getElementById("top-list");
 const filterButtons = document.querySelectorAll(".filter");
 const timeButtons = document.querySelectorAll(".time");
 
-let currentType = "tracks"; // Default to songs
+let currentType = "tracks"; // Default to tracks
 let currentTime = "short_term"; // Default to weekly
 
 filterButtons.forEach(button => {
@@ -49,6 +44,11 @@ timeButtons.forEach(button => {
 });
 
 async function fetchTopStats() {
+  if (!spotifyAccessToken) {
+    topList.innerHTML = "<li>Please connect your Spotify account to view stats.</li>";
+    return;
+  }
+
   const url = `https://api.spotify.com/v1/me/top/${currentType}?time_range=${currentTime}&limit=10`;
 
   try {
@@ -67,11 +67,8 @@ async function fetchTopStats() {
 
 function renderTopStats(items) {
   topList.innerHTML = items.map(item => {
-    const name = item.name || item.title;
-    const artist = item.artists ? item.artists[0].name : "";
-    return `<li>${name}${artist ? ` by ${artist}` : ""}</li>`;
+    const name = item.name || "Unknown Title";
+    const artist = item.artists ? item.artists[0].name : "Unknown Artist";
+    return `<li>${name} by ${artist}</li>`;
   }).join("");
 }
-
-// Fetch stats on page load
-document.addEventListener("DOMContentLoaded", fetchTopStats);

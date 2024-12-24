@@ -139,60 +139,61 @@ async function decryptData(key, ivArray, encryptedData) {
 
 
 
-
 // Spotify API Credentials
 const SPOTIFY_CLIENT_ID = "277d88e7a20b406f8d0b29111581da38"; // Replace with your Spotify Client ID
 const REDIRECT_URI = "https://leelan.studio/"; // Replace with your app's Redirect URI
 let spotifyAccessToken = "";
 
+// Button Selectors for Both Screens
+const connectSpotifyBtnJournal = document.getElementById("connectSpotifyBtnJournal");
+const connectSpotifyBtnStats = document.getElementById("connectSpotifyBtnStats");
 
-function displayUserName(userName) {
-  const header = document.querySelector(".header");
-
-  // Remove any existing greeting
-  const existingGreeting = header.querySelector("h2");
-  if (existingGreeting) {
-    existingGreeting.remove();
-  }
-
-  const greeting = document.createElement("h2");
-  greeting.textContent = `Hi, ${userName}`;
-  greeting.style.color = "#1DB954"; // Optional: Style the text
-  header.appendChild(greeting);
-}
-
+// Handle Spotify Connection on Page Load
 document.addEventListener("DOMContentLoaded", () => {
   const hash = window.location.hash.substring(1);
   const params = new URLSearchParams(hash);
   const newAccessToken = params.get("access_token");
 
   if (newAccessToken) {
-    // Store the token and fetch the user's name
     localStorage.setItem("spotifyAccessToken", newAccessToken);
     spotifyAccessToken = newAccessToken;
-    connectSpotifyBtn.style.display = "none";
-    fetchUserName(); // Fetch and display the user's name
+    hideSpotifyButtons();
+    fetchUserName();
     window.history.replaceState({}, document.title, window.location.pathname);
   } else {
-    // Retrieve token from storage
     spotifyAccessToken = localStorage.getItem("spotifyAccessToken");
-
     if (spotifyAccessToken) {
-      connectSpotifyBtn.style.display = "none";
-      fetchUserName(); // Fetch and display the user's name
+      hideSpotifyButtons();
+      fetchUserName();
     } else {
-      connectSpotifyBtn.style.display = "block";
+      showSpotifyButtons();
     }
   }
 });
 
-// Other existing functions and event listeners remain unchanged...
-async function fetchUserName() {
-  if (!spotifyAccessToken) {
-    console.error("No access token available.");
-    return;
-  }
+// Spotify OAuth Logic
+function redirectToSpotifyAuth() {
+  const scopes = "user-read-private user-read-email user-top-read";
+  const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    REDIRECT_URI
+  )}&scope=${encodeURIComponent(scopes)}&show_dialog=true`;
+  window.location.href = authUrl;
+}
 
+// Hide Spotify Buttons
+function hideSpotifyButtons() {
+  connectSpotifyBtnJournal.style.display = "none";
+  connectSpotifyBtnStats.style.display = "none";
+}
+
+// Show Spotify Buttons
+function showSpotifyButtons() {
+  connectSpotifyBtnJournal.style.display = "block";
+  connectSpotifyBtnStats.style.display = "block";
+}
+
+// Fetch User Name from Spotify API
+async function fetchUserName() {
   try {
     const response = await fetch("https://api.spotify.com/v1/me", {
       headers: {
@@ -200,28 +201,28 @@ async function fetchUserName() {
       },
     });
     const data = await response.json();
-    console.log("Spotify API Response:", data);
-
     const userName = data.display_name || "User";
-    const userId = data.id; // Spotify user ID
-    console.log("Fetched User Name:", userName);
-    console.log("Fetched User ID:", userId);
-
-    if (userId) {
-      localStorage.setItem("spotifyUserId", userId); // Save Spotify user ID
-      const derivedKey = await deriveKeyFromSpotify(userId);
-      const exportedKey = await exportKey(derivedKey);
-      localStorage.setItem("encryptionKey", exportedKey); // Store the key securely
-
-      displayUserName(userName);
-    } else {
-      console.error("User ID is missing in Spotify response.");
-    }
+    displayUserName(userName);
   } catch (error) {
     console.error("Error fetching user profile:", error);
   }
 }
-// Close the fetchUserName function
+
+// Display User Name on the Header
+function displayUserName(userName) {
+  const header = document.querySelector(".header");
+  const existingGreeting = header.querySelector("h2");
+  if (existingGreeting) existingGreeting.remove();
+
+  const greeting = document.createElement("h2");
+  greeting.textContent = `Hi, ${userName}`;
+  greeting.style.color = "#1DB954";
+  header.appendChild(greeting);
+}
+
+// Attach Event Listeners to Both Buttons
+connectSpotifyBtnJournal.addEventListener("click", redirectToSpotifyAuth);
+connectSpotifyBtnStats.addEventListener("click", redirectToSpotifyAuth);
 
 
 
