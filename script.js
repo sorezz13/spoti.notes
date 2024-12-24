@@ -601,6 +601,8 @@ async function deleteEntryFromCloud(id) {
 
 
 function renderEntry(entry) {
+  console.log("Rendering Entry:", entry); // Debug: Log the entry being rendered
+
   const entryDiv = document.createElement("div");
   entryDiv.classList.add("entry");
   entryDiv.setAttribute("data-id", entry.id); // Set the document ID
@@ -631,6 +633,7 @@ function renderEntry(entry) {
 
   entriesContainer.prepend(entryDiv);
 }
+
 
   
 
