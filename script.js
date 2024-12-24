@@ -525,6 +525,8 @@ async function saveEncryptedEntryToCloud(entry) {
 
 import { orderBy } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
 
+let unsubscribe = null; // Variable to hold the unsubscribe function
+
 async function loadDecryptedEntriesFromFirebase() {
   const userId = localStorage.getItem("spotifyUserId");
   if (!userId) {
@@ -544,12 +546,23 @@ async function loadDecryptedEntriesFromFirebase() {
     const entriesQuery = query(
       collection(db, "journalEntries"),
       where("userId", "==", userId),
-      orderBy("date", "desc") // Order entries by date in descending order
+      orderBy("date", "desc") // Ensure the newest entries are fetched first
     );
 
-    onSnapshot(entriesQuery, (querySnapshot) => {
+    // Unsubscribe from any existing listener to prevent duplicates
+    if (unsubscribe) {
+      unsubscribe();
+    }
+
+    // Set up the new onSnapshot listener
+    unsubscribe = onSnapshot(entriesQuery, (querySnapshot) => {
       console.log("Fetched Entries:", querySnapshot.size); // Debug
       entriesContainer.innerHTML = ""; // Clear existing entries
+
+      if (querySnapshot.empty) {
+        entriesContainer.innerHTML = "<p>No entries found.</p>";
+        return;
+      }
 
       querySnapshot.forEach(async (doc) => {
         const data = doc.data();
@@ -562,7 +575,7 @@ async function loadDecryptedEntriesFromFirebase() {
 
         try {
           const decryptedText = await decryptData(key, data.iv, data.text);
-          console.log("Decrypted Text:", decryptedText);
+          console.log("Decrypted Text for Entry:", decryptedText);
 
           renderEntry({
             ...data,
@@ -578,6 +591,7 @@ async function loadDecryptedEntriesFromFirebase() {
     console.error("Error loading or decrypting entries:", error);
   }
 }
+
 
 
 
